@@ -1,15 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from 'react'
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from "../../assets/icons/Home.svg";
 import Profile from "../../assets/icons/Profile.svg";
-import Browse from "../../assets/icons/Browse.svg";
+import Calendar from "../../assets/icons/Calendar.svg";
 import BrowseScreen from "../../screens/BrowseScreen";
 import ProfileScreen from "../../screens/ProfileScreen";
 import HomeScreen from "../../screens/HomeScreen";
+import { Platform } from 'react-native'
+
 
 const Tab = createBottomTabNavigator();
 
 export default function MainStack() {
+  let padding = 30;
+  const [keyboardStatus, setKeyboardStatus] = useState(false);
   return (
     <Tab.Navigator
       initialRouteName={"HomeScreen"}
@@ -17,8 +21,29 @@ export default function MainStack() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: "gray",
-          display: "flex",
+          backgroundColor: '#171717',
+          position: 'absolute',
+          bottom: (Platform.OS === 'android' && keyboardStatus) ? 0 : 30,
+          left: 100,
+          right: 100,
+          borderRadius: 100,
+          height: 51,
+          ...Platform.select({
+            ios: {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 3,
+              padding: padding,
+            },
+            android: {
+              elevation: 3,
+              shadowColor: '#808080',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 3,
+            },
+          }),
         },
       }}
     >
@@ -26,21 +51,21 @@ export default function MainStack() {
         name="HomeScreen"
         component={HomeScreen}
         options={{
-          tabBarIcon: () => <Home stroke={"black"} width={24} height={24} />,
+          tabBarIcon: () => <Home stroke={"white"} width={24} height={24} />,
         }}
       />
       <Tab.Screen
         name="BrowseScreen"
         component={BrowseScreen}
         options={{
-          tabBarIcon: () => <Browse stroke={"black"} width={24} height={24} />,
+          tabBarIcon: () => <Calendar stroke={"white"} width={24} height={24} />,
         }}
       />
       <Tab.Screen
         name="ProfileScreen"
         component={ProfileScreen}
         options={{
-          tabBarIcon: () => <Profile stroke={"black"} width={24} height={24} />,
+          tabBarIcon: () => <Profile stroke={"white"} width={24} height={24} />,
         }}
       />
     </Tab.Navigator>
