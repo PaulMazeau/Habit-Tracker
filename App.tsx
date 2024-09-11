@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -7,10 +7,7 @@ import MainStack from "./component/Navigation/MainStack";
 import AuthStack from "./component/Navigation/AuthStack";
 import { UserProvider } from "./context/UserContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { loadAsync, useFonts } from "expo-font";
-import * as SplashScreen from "expo-splash-screen";
-
-SplashScreen.preventAutoHideAsync();
+import * as Font from "expo-font";
 
 const Stack = createNativeStackNavigator();
 
@@ -46,18 +43,16 @@ const AppNavigator = () => {
 
 // Composant App
 export default function App() {
-  const [loaded, error] = useFonts({
+  const [fontsLoaded] = Font.useFonts({
     Geist: require("./assets/fonts/Geist.ttf"),
   });
 
-  useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
-
-  if (!loaded && !error) {
-    return null;
+  if (!fontsLoaded) {
+    return (
+      <View>
+        <Text>Loading fonts...</Text>
+      </View>
+    );
   }
 
   return (

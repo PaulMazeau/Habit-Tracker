@@ -24,11 +24,6 @@ export default function HomeScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["10%", "50%"], []);
 
-  // callbacks
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log("handleSheetChanges", index);
-  }, []);
-
   const handleSignOut = () => {
     signOut(FB_AUTH)
       .then(() => {
@@ -64,7 +59,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={{ fontFamily: "Geist" }}>HomePage</Text>
+      <Text style={{ fontFamily: "Geist" }}>HomePage 12345</Text>
       <Text>
         Bienvenue {profile.FirstName} {profile.LastName}
       </Text>
@@ -74,9 +69,8 @@ export default function HomeScreen() {
       <Button title="Déconnexion" onPress={handleSignOut} />
       <BottomSheet
         ref={bottomSheetRef}
-        index={1}
+        index={0}
         snapPoints={snapPoints}
-        onChange={handleSheetChanges}
         backdropComponent={(props) => (
           <CustomBackdrop
             {...props}
