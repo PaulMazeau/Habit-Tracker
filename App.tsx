@@ -52,6 +52,7 @@ const AppNavigator = () => {
 export default function App() {
   const [fontsLoaded] = Font.useFonts({
     Geist: require("./assets/fonts/Geist.ttf"),
+    GeistMono: require("./assets/fonts/GeistMono.ttf"),
   });
 
   if (!fontsLoaded) {
