@@ -1,18 +1,37 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function BrowseScreen() {
+type HeaderProps = {
+  title: string;
+};
+
+const Header: React.FC<HeaderProps> = ({ title }) => {
   return (
-      <View style={styles.container}>
-        <Text>Ceci est le header</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <Text style={styles.title}>{title}</Text>
+    </View>
+  </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    height: 44,
+  safeArea: {
+    backgroundColor: '#00000000', 
+    paddingBottom: Platform.OS === 'android' ? 25 : -25
   },
+  header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingTop: 8,
+      paddingHorizontal: 8,
+      justifyContent: 'space-between',
+  },
+  title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+  }
 });
+
+export default Header;
