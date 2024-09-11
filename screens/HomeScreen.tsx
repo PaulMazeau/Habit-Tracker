@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Text, Button } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { FB_AUTH, FB_DB } from "../firebaseconfig";
@@ -12,17 +6,12 @@ import { signOut } from "firebase/auth";
 import { useUser } from "../context/UserContext";
 import { getHabits } from "../services/habits";
 import { HabitsType } from "../types/habits";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import CustomBackdrop from "../component/Reusable/CustomBackdrop";
-import CustomHandle from "../component/Reusable/CustomHandle";
+import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { profile } = useUser(); // Utiliser le hook useUser pour accéder au profil
   const [habits, setHabits] = useState<HabitsType[]>([]);
-
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["10%", "50%"], []);
 
   const handleSignOut = () => {
     signOut(FB_AUTH)
@@ -36,14 +25,6 @@ export default function HomeScreen() {
         console.error("Erreur lors de la déconnexion:", error);
       });
   };
-
-  const handleBackdropPress = useCallback((behavior) => {
-    if (behavior === "close") {
-      bottomSheetRef.current?.close();
-    } else if (behavior === "collapse") {
-      bottomSheetRef.current?.collapse();
-    }
-  }, []);
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -67,23 +48,7 @@ export default function HomeScreen() {
         <Text key={habit.id}>{habit.name}</Text>
       ))}
       <Button title="Déconnexion" onPress={handleSignOut} />
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={0}
-        snapPoints={snapPoints}
-        backdropComponent={(props) => (
-          <CustomBackdrop
-            {...props}
-            pressBehavior="collapse"
-            onPress={handleBackdropPress}
-          />
-        )}
-        handleComponent={CustomHandle}
-      >
-        <View style={styles.contentContainer}>
-          <Text>Awesome 🎉</Text>
-        </View>
-      </BottomSheet>
+      <CreateHabitBottomSheet />
     </View>
   );
 }
