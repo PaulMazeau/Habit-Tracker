@@ -7,20 +7,23 @@ import {
   Dimensions,
   findNodeHandle,
 } from "react-native";
-import { HabitsByDate } from "../types/habits";
+import Svg, { Circle, G } from "react-native-svg";
+import Animated, { useAnimatedProps } from "react-native-reanimated";
+import Header from "../component/Reusable/Header";
+import { useFocusEffect } from "@react-navigation/native";
 
-const habitsByDates: HabitsByDate[] = [
-  {
-    date: new Date(2024, 0, 1),
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+const habitsByDates = {
+  "2024/1/1": {
     totalHabits: 5,
     habits: 3,
   },
-  {
-    date: new Date(2024, 8, 1),
+  "2024/9/1": {
     totalHabits: 5,
     habits: 3,
   },
-];
+};
 
 const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
 
@@ -44,26 +47,59 @@ const MonthCalendar = React.forwardRef(
     const daysInMonth = getDaysInMonth(month, year);
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
+    const radius = 15;
+    const strokeWidth = 7;
+    const circumference = 2 * Math.PI * radius;
+
+    const calculateProgress = (day: number) => {
+      const date = `${year}/${month + 1}/${day}`;
+      const habits = habitsByDates[date];
+      if (!habits) {
+        return 0;
+      }
+      return habits.habits / habits.totalHabits;
+    };
+
+    const getAnimatedProps = (progress: number) => {
+      return useAnimatedProps(() => {
+        return {
+          strokeDashoffset: circumference - circumference * progress,
+        };
+      });
+    };
+
     return (
-      <View style={styles.monthContainer}>
+      <View ref={ref} style={styles.monthContainer}>
         <Text style={styles.monthTitle}>{monthNames[month]}</Text>
         <View style={styles.calendar}>
           {days.map((day) => (
             <View key={day} style={styles.dayContainer}>
               <Text style={styles.dayNumber}>{day}</Text>
-              {habitsByDates.map((habitsByDate) => {
-                if (
-                  habitsByDate.date.getMonth() === month &&
-                  habitsByDate.date.getDate() === day
-                ) {
-                  return (
-                    <View
-                      key={habitsByDate.date.toDateString()}
-                      style={styles.blueCrescent}
+              <View style={styles.progress}>
+                <Svg height="120" width="120" viewBox="0 0 120 120">
+                  <G transform={`rotate(-90, 60, 60)`}>
+                    <Circle
+                      cx="60"
+                      cy="60"
+                      r={radius}
+                      stroke="#e6e6e6"
+                      strokeWidth={strokeWidth}
+                      fill="none"
                     />
-                  );
-                }
-              })}
+                    <AnimatedCircle
+                      cx="60"
+                      cy="60"
+                      r={radius}
+                      stroke="#0049AC"
+                      strokeWidth={strokeWidth}
+                      strokeDasharray={circumference}
+                      animatedProps={getAnimatedProps(calculateProgress(day))}
+                      strokeLinecap="round"
+                      fill="none"
+                    />
+                  </G>
+                </Svg>
+              </View>
             </View>
           ))}
         </View>
@@ -74,15 +110,33 @@ const MonthCalendar = React.forwardRef(
 
 export default function YearCalendarScreen() {
   const scrollViewRef = useRef(null);
+  const monthRefs = useRef([]);
+
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
 
-  useEffect(() => {
-    scrollViewRef.current.scrollTo({
-      y: Dimensions.get("window").height * currentMonth,
-      animated: false,
-    });
-  }, []);
+  const scrollToCurrentMonth = () => {
+    if (monthRefs.current[currentMonth]) {
+      monthRefs.current[currentMonth].measureLayout(
+        findNodeHandle(scrollViewRef.current),
+        (x, y) => {
+          const scrollPosition = y - 50;
+          scrollViewRef.current.scrollTo({
+            y: scrollPosition,
+            animated: false,
+          });
+        },
+        () => console.error("measureLayout failed")
+      );
+    }
+  };
+
+  // Scroll to the current month when the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      scrollToCurrentMonth();
+    }, [])
+  );
 
   return (
     <ScrollView
@@ -90,18 +144,27 @@ export default function YearCalendarScreen() {
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
     >
-      {monthNames.map((_, index) => (
-        <MonthCalendar key={index} month={index} year={currentYear} />
-      ))}
+      <View style={styles.body}>
+        <Header title={`Calendrier`} />
+        {monthNames.map((_, index) => (
+          <MonthCalendar
+            key={index}
+            month={index}
+            year={currentYear}
+            ref={(el) => (monthRefs.current[index] = el)}
+          />
+        ))}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingTop: 50,
-    backgroundColor: "#fff",
+  body: {
+    flex: 1,
+    backgroundColor: "#FCF8F5",
   },
+  container: {},
   contentContainer: {
     paddingBottom: 50,
   },
@@ -132,19 +195,16 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 40,
+    position: "relative",
   },
   dayNumber: {
     fontFamily: "Geist",
+    fontWeight: "bold",
     fontSize: 16,
-    marginBottom: 5,
   },
-  blueCrescent: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 3,
-    borderColor: "#0000FF",
-    transform: [{ rotate: "135deg" }],
+  progress: {
+    position: "absolute",
+    top: -6,
   },
 });
