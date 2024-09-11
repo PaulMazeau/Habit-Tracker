@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, Button } from "react-native";
+import { StyleSheet, View, Text } from "react-native";
+import Button from "../component/Reusable/Button";
 import { useNavigation } from "@react-navigation/native";
 import { FB_AUTH, FB_DB } from "../firebaseconfig";
 import { signOut } from "firebase/auth";
 import { useUser } from "../context/UserContext";
-import { getHabits } from "../services/habits";
-import { HabitsType } from "../types/habits";
-import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
+import { addHabit, getHabits } from "../services/habits";
+import { Habits } from "../types/habits";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { profile } = useUser(); // Utiliser le hook useUser pour accéder au profil
-  const [habits, setHabits] = useState<HabitsType[]>([]);
+  const [habits, setHabits] = useState<Habits[]>([]);
 
   const handleSignOut = () => {
     signOut(FB_AUTH)
@@ -40,7 +40,14 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={{ fontFamily: "Geist" }}>HomePage 12345</Text>
+      <Button
+        onPress={() =>
+          addHabit(profile, FB_DB, {
+            name: "Faire quelque chose de cool",
+          })
+        }
+        title="HABITS"
+      />
       <Text>
         Bienvenue {profile.FirstName} {profile.LastName}
       </Text>
@@ -48,7 +55,7 @@ export default function HomeScreen() {
         <Text key={habit.id}>{habit.name}</Text>
       ))}
       <Button title="Déconnexion" onPress={handleSignOut} />
-      <CreateHabitBottomSheet />
+      {/* <CreateHabitBottomSheet /> */}
     </View>
   );
 }

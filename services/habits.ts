@@ -5,13 +5,15 @@ import {
   onSnapshot,
   Unsubscribe,
   addDoc,
+  Firestore,
 } from "firebase/firestore";
-import { HabitsType } from "../types/habits";
+import { Habits } from "../types/habits";
+import { UserInfo } from "firebase/auth";
 
 export const getHabits = (
-  currentUser,
-  store,
-  callback: (habits: HabitsType[]) => void
+  currentUser: UserInfo,
+  store: Firestore,
+  callback: (habits: Habits[]) => void
 ): Unsubscribe => {
   if (!currentUser) {
     callback([]);
@@ -31,7 +33,7 @@ export const getHabits = (
           ({
             id: doc.id,
             ...doc.data(),
-          } as HabitsType)
+          } as Habits)
       );
       callback(habits);
     },
@@ -45,9 +47,9 @@ export const getHabits = (
 };
 
 export const addHabit = async (
-  currentUser,
-  store,
-  habit: Omit<HabitsType, "id" | "User">
+  currentUser: UserInfo,
+  store: Firestore,
+  habit: Omit<Habits, "id" | "user">
 ): Promise<void> => {
   if (!currentUser) {
     return;
@@ -56,7 +58,7 @@ export const addHabit = async (
   try {
     await addDoc(collection(store, "habits"), {
       ...habit,
-      User: currentUser.uid, // Note: Changed 'user' to 'User' to match your schema
+      user: currentUser.uid, // Note: Changed 'user' to 'User' to match your schema
     });
   } catch (error) {
     console.error("Error adding habit:", error);

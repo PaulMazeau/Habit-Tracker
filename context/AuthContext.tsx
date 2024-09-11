@@ -1,6 +1,12 @@
-import { createContext, useState, useEffect, useContext } from 'react';
-import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
-import { FB_AUTH } from '../firebaseconfig';
+import { createContext, useState, useEffect, useContext } from "react";
+import {
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+} from "firebase/auth";
+import { FB_AUTH } from "../firebaseconfig";
 
 const AuthContext = createContext(null);
 
@@ -23,7 +29,7 @@ export const AuthProvider = ({ children }) => {
   // Réinitialisation d'un mot de passe oublié
   const resetPassword = (email) => {
     return sendPasswordResetEmail(FB_AUTH, email);
-  }
+  };
 
   // Déconnexion de l'utilisateur
   const logOut = () => {
@@ -33,6 +39,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(FB_AUTH, (user) => {
       setCurrentUser(user);
+      console.log(user);
       setLoading(false); // Données chargées ou utilisateur non connecté
     });
 
@@ -45,12 +52,8 @@ export const AuthProvider = ({ children }) => {
     signIn,
     logOut,
     resetPassword,
-    loading
+    loading,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

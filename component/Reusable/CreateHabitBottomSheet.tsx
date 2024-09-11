@@ -1,4 +1,4 @@
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import CustomBackdrop from "../../component/Reusable/CustomBackdrop";
 import CustomHandle from "../../component/Reusable/CustomHandle";
 import { useCallback, useMemo, useRef } from "react";
