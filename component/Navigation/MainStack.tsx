@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Home from "../../assets/icons/Home.svg";
 import Profile from "../../assets/icons/Profile.svg";
 import Calendar from "../../assets/icons/Calendar.svg";
-import BrowseScreen from "../../screens/BrowseScreen";
+import CalendarScreen from "../../screens/CalendarScreen";
 import ProfileScreen from "../../screens/ProfileScreen";
 import HomeScreen from "../../screens/HomeScreen";
-import { Platform } from 'react-native'
-
+import { Platform } from "react-native";
 
 const Tab = createBottomTabNavigator();
 
@@ -21,16 +20,16 @@ export default function MainStack() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: '#171717',
-          position: 'absolute',
-          bottom: (Platform.OS === 'android' && keyboardStatus) ? 0 : 30,
+          backgroundColor: "#171717",
+          position: "absolute",
+          bottom: Platform.OS === "android" && keyboardStatus ? 0 : 30,
           left: 100,
           right: 100,
           borderRadius: 100,
           height: 51,
           ...Platform.select({
             ios: {
-              shadowColor: '#000',
+              shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.1,
               shadowRadius: 3,
@@ -38,7 +37,7 @@ export default function MainStack() {
             },
             android: {
               elevation: 3,
-              shadowColor: '#808080',
+              shadowColor: "#808080",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.1,
               shadowRadius: 3,
@@ -55,10 +54,12 @@ export default function MainStack() {
         }}
       />
       <Tab.Screen
-        name="BrowseScreen"
-        component={BrowseScreen}
+        name="CalendarScreen"
+        component={CalendarScreen}
         options={{
-          tabBarIcon: () => <Calendar stroke={"white"} width={24} height={24} />,
+          tabBarIcon: () => (
+            <Calendar stroke={"white"} width={24} height={24} />
+          ),
         }}
       />
       <Tab.Screen

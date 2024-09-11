@@ -28,7 +28,7 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/Geist.ttf"]
+          "fonts": ["./assets/fonts/Geist.ttf", "./assets/fonts/GeistMono.ttf"]
         }
       ]
     ]
