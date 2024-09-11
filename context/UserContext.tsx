@@ -1,9 +1,9 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { FB_DB } from '../firebaseconfig';
-import { useAuth } from './AuthContext';
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { FB_DB } from "../firebaseconfig";
+import { useAuth } from "./AuthContext";
 
-const UserContext = createContext();
+const UserContext = createContext(null);
 
 export const useUser = () => useContext(UserContext);
 
@@ -15,14 +15,14 @@ export const UserProvider = ({ children }) => {
     let unsubscribeFromUser = () => {};
 
     if (currentUser) {
-      const userProfileRef = doc(FB_DB, 'users', currentUser.uid);
+      const userProfileRef = doc(FB_DB, "users", currentUser.uid);
 
       unsubscribeFromUser = onSnapshot(userProfileRef, (doc) => {
         if (doc.exists()) {
           const userData = doc.data();
           setProfile({
             ...userData,
-            uid: currentUser.uid
+            uid: currentUser.uid,
           });
         } else {
           console.log("No such user!");
