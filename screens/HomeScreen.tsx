@@ -29,7 +29,7 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { profile } = useUser(); // Utiliser le hook useUser pour accéder au profil
-  const [habits, setHabits] = useState<HabitsType[]>([]);
+  const [habits, setHabits] = useState<Habits[]>([]);
   const [progress, setProgress] = useState(0); // la progression en pourcentage (0 à 1)
   const progressAnimated = useSharedValue(0);
   // const [checkedHabitsId , setCheckedHabitsId] = useState<string[]>([]);
