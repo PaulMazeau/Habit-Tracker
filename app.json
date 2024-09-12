@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.TheChallengeApp"
@@ -32,9 +30,9 @@
         "expo-font",
         {
           "fonts": [
-            "./assets/fonts/Geist.ttf"
+            "./assets/fonts/Geist.ttf",
+            "./assets/fonts/GeistMono.ttf"
           ]
-          "fonts": ["./assets/fonts/Geist.ttf", "./assets/fonts/GeistMono.ttf"]
         }
       ]
     ]
