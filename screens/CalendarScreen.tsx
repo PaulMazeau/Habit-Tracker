@@ -151,6 +151,7 @@ export default function YearCalendarScreen() {
 
     if (profile?.uid) {
       unsubscribe = getAllHabitsCalendar(profile, FB_DB, (fetchedHabits) => {
+        console.log(fetchedHabits, "fetchedHabits");
         setHabitsCalendar(fetchedHabits);
       });
     }

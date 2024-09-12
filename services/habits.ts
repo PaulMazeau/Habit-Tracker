@@ -186,11 +186,6 @@ export const getAllHabitsCalendar = (
     [key: string]: { totalHabits: number; habits: number };
   } = {};
 
-  const habitsUnsubscribe = getHabits(currentUser, store, (habits) => {
-    totalHabits = habits.length;
-    updateHabitsByDates();
-  });
-
   const userHabitsUnsubscribe = onSnapshot(
     query(
       collection(store, FB_COLLECTION.USER_HABITS),
@@ -200,19 +195,18 @@ export const getAllHabitsCalendar = (
       habitsByDates = {}; // Reset habitsByDates
       querySnapshot.docs.forEach((doc) => {
         const habit = { id: doc.id, ...doc.data() } as HabitsByDate;
-        console.log(habit.date);
         const date = habit.date.toDate();
         const dateKey = `${date.getFullYear()}/${
           date.getMonth() + 1
         }/${date.getDate()}`;
 
-        if (!habitsByDates[dateKey]) {
-          habitsByDates[dateKey] = { totalHabits, habits: 0 };
-        }
-        habitsByDates[dateKey].habits = habit.habits.length;
+        habitsByDates[dateKey] = {
+          totalHabits: habit.habits.length,
+          habits: habit.habits.filter((h) => h.isChecked).length,
+        };
       });
 
-      updateHabitsByDates();
+      callback({ ...habitsByDates });
     },
     (error) => {
       console.error("Error fetching user habits:", error);
@@ -220,15 +214,7 @@ export const getAllHabitsCalendar = (
     }
   );
 
-  function updateHabitsByDates() {
-    Object.keys(habitsByDates).forEach((key) => {
-      habitsByDates[key].totalHabits = totalHabits;
-    });
-    callback({ ...habitsByDates }); // Create a new object to trigger updates
-  }
-
   return () => {
-    habitsUnsubscribe();
     userHabitsUnsubscribe();
   };
 };
