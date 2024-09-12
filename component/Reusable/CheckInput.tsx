@@ -1,25 +1,49 @@
-import React from 'react';
-import { StyleSheet, TouchableOpacity, Text, ViewStyle , View} from 'react-native';
-import CheckLight from '../../assets/icons/Check-light.svg';
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  ViewStyle,
+  View,
+} from "react-native";
+import CheckLight from "../../assets/icons/Check-light.svg";
+import { useUser } from "../../context/UserContext";
+import { FB_DB } from "../../firebaseconfig";
+import {
+  getHabitsByDate,
+  updateHabit,
+  updateUserHabit,
+} from "../../services/habits";
 
 interface CheckInputProps {
-    id : string ;
-    onChange ?: () => void;
-    content : string;
-    checked ?: boolean;
+  id: string;
+  content: string;
+  isChecked: boolean;
 }
 
-const CheckInput : React.FC<CheckInputProps> = ({id, onChange, content, checked }) => {
-    return (
-        <TouchableOpacity onPress={onChange} style={styles.container}>
-            <View style={ styles.check}>
-                {checked && 
-                        <CheckLight style={styles.checkLogo} width={'100%'} height={'auto'}></CheckLight>
-                }
-            </View>
-            <Text style={styles.text}>{content}</Text>
-        </TouchableOpacity>
-    );
+function CheckInput({ id, content, isChecked }: CheckInputProps) {
+  const { profile } = useUser();
+  const [checked, setChecked] = useState(isChecked);
+
+  const handlePress = () => {
+    setChecked(!checked);
+    updateUserHabit(profile, FB_DB, {
+      date: new Date().toISOString(),
+      habits: [id],
+      user: profile.uid,
+    });
+  };
+
+  return (
+    <TouchableOpacity onPress={handlePress} style={styles.container}>
+      <View style={styles.check}>
+        {checked && (
+          <CheckLight style={styles.checkLogo} width={"100%"} height={"auto"} />
+        )}
+      </View>
+      <Text style={styles.text}>{content}</Text>
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({
