@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View, Text, TextInput } from "react-native";
 import Button from "../component/Reusable/Button";
 import { useNavigation } from "@react-navigation/native";
 import { FB_AUTH, FB_DB } from "../firebaseconfig";
 import { signOut } from "firebase/auth";
 import { useUser } from "../context/UserContext";
-import { addHabit, getHabits } from "../services/habits";
+import {
+  addHabit,
+  deleteHabit,
+  getHabits,
+  updateHabit,
+} from "../services/habits";
 import { Habits } from "../types/habits";
+import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -40,14 +46,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Button
-        onPress={() =>
-          addHabit(profile, FB_DB, {
-            name: "Faire quelque chose de cool",
-          })
-        }
-        title="HABITS"
-      />
       <Text>
         Bienvenue {profile.FirstName} {profile.LastName}
       </Text>
@@ -55,7 +53,7 @@ export default function HomeScreen() {
         <Text key={habit.id}>{habit.name}</Text>
       ))}
       <Button title="Déconnexion" onPress={handleSignOut} />
-      {/* <CreateHabitBottomSheet /> */}
+      <CreateHabitBottomSheet />
     </View>
   );
 }
@@ -71,5 +69,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FCF8F5",
     flex: 1,
     alignItems: "center",
+  },
+  input: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
   },
 });
