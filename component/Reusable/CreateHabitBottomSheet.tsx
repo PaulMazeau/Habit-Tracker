@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, Button, TextInput, TouchableOpacity } from 'rea
 import {
   BottomSheetModal,
   BottomSheetView,
-  BottomSheetModalProvider,
   BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet';
 import { useUser } from '../../context/UserContext';
 import { Habits } from '../../types/habits';
+import AddButton from '../../assets/icons/AddButton.svg';
 
-const App = () => {
+const CreateHabitBottomSheet = () => {
   const { profile } = useUser();
   const [habits, setHabits] = useState<Pick<Habits, "user" | "name">[]>([]);
   // ref
@@ -19,9 +19,8 @@ const App = () => {
   const snapPoints = useMemo(() => ['25%', '80%'], []);
 
   // callbacks
-  const handlePresentModalPress = useCallback(() => {
-    bottomSheetModalRef.current?.present();
-  }, []);
+  const handlePresentModalPress = () => bottomSheetModalRef.current?.present();
+  
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
   }, []);
@@ -43,18 +42,19 @@ const App = () => {
 
   // renders
   return (
-    <BottomSheetModalProvider>
+
       <View style={styles.container}>
         <TouchableOpacity
           style={styles.addButton}
           onPress={handlePresentModalPress}
         >
-          <Text style={styles.addButtonText}>+ Ajouter une habitude</Text>
+          <AddButton/>
         </TouchableOpacity>
 
         <BottomSheetModal
           ref={bottomSheetModalRef}
           index={1}
+          style={{ zIndex: 1000 }} 
           snapPoints={snapPoints}
           onChange={handleSheetChanges}
           backdropComponent={(props) => (
@@ -88,13 +88,11 @@ const App = () => {
             ))}
             <View style={{ flex: 1 }}></View>
             <View style={styles.buttonContainer}>
-              {/* Ferme la BottomSheet quand on clique sur "Ajouter l'habitude" */}
-              <Button title="+ Ajouter l'habitude" onPress={closeBottomSheet} />
+              <Button title="Ajouter l'habitude" onPress={closeBottomSheet} color="white"/>
             </View>
           </BottomSheetView>
         </BottomSheetModal>
       </View>
-    </BottomSheetModalProvider>
   );
 };
 
@@ -114,12 +112,8 @@ const styles = StyleSheet.create({
   },
   addButton: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 100,
     right: 20,
-    backgroundColor: '#172ACE',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
   },
   addButtonText: {
     color: 'white',
@@ -148,13 +142,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   buttonContainer: {
-    width: "90%",
+    width: "95%",
     marginHorizontal: "auto",
     backgroundColor: "#0049AC",
     borderRadius: 13,
     justifyContent: "center",
     alignContent: 'center', 
     marginBottom: 20,
+    height: 48,
   },
   habit: {
     backgroundColor: "#F3EFEE",
@@ -165,4 +160,4 @@ const styles = StyleSheet.create({
   
 });
 
-export default App;
+export default CreateHabitBottomSheet;
