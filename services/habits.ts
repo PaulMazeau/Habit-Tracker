@@ -11,9 +11,15 @@ import {
   getDoc,
   updateDoc,
   orderBy,
+  Timestamp,
+  getDocs,
+  arrayUnion,
+  setDoc,
 } from "firebase/firestore";
-import { Habits, HabitsByDate } from "../types/habits";
+import { HabitElement, Habits, HabitsByDate } from "../types/habits";
 import { UserInfo } from "firebase/auth";
+// import uid
+import { makeid } from "../utils/utils";
 
 const ERROR_MESSAGE = {
   USER_NOT_AUTHENTICATED: "User not authenticated",
@@ -78,10 +84,12 @@ export function getHabitsByDate(
     return () => {};
   }
 
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date();
-  endOfDay.setHours(23, 59, 59, 999);
+  const startOfDay = Timestamp.fromDate(
+    new Date(new Date().setHours(0, 0, 0, 0))
+  );
+  const endOfDay = Timestamp.fromDate(
+    new Date(new Date().setHours(23, 59, 59, 999))
+  );
 
   const q = query(
     collection(store, FB_COLLECTION.USER_HABITS),
@@ -93,7 +101,6 @@ export function getHabitsByDate(
   const unsubscribe = onSnapshot(
     q,
     (querySnapshot) => {
-      console.log({ QUERY_SNAPSHOT: querySnapshot.empty });
       if (querySnapshot.empty) {
         callback(null);
       } else {
@@ -119,19 +126,45 @@ export function getHabitsByDate(
 export async function addHabit(
   currentUser: UserInfo,
   store: Firestore,
-  habit: Omit<Habits, "id" | "user">
+  habit: Omit<Habits, "id" | "user">,
+  userHabitId: string
 ): Promise<void> {
   if (!currentUser) {
     return;
   }
 
+  const userHabitDocRef = doc(store, "user_habits", userHabitId);
+
   try {
-    await addDoc(collection(store, FB_COLLECTION.HABITS), {
-      ...habit,
-      user: currentUser.uid, // Note: Changed 'user' to 'User' to match your schema
-    });
+    // Get the current user_habits document
+    const userHabitDoc = await getDoc(userHabitDocRef);
+
+    if (userHabitDoc.exists()) {
+      // If the document exists, add the new habit to the "habits" array
+      await updateDoc(userHabitDocRef, {
+        habits: arrayUnion({
+          id: makeid(16),
+          name: habit.name,
+          isChecked: false, // default value for new habits
+        }),
+        date: new Date(),
+      });
+    } else {
+      // If the document doesn't exist, create a new one with the new habit
+      await setDoc(userHabitDocRef, {
+        habits: [
+          {
+            id: makeid(16),
+            name: habit.name,
+            isChecked: false, // default value for new habits
+          },
+        ],
+        user: currentUser.uid,
+        date: new Date(),
+      });
+    }
   } catch (error) {
-    console.error(ERROR_MESSAGE.WHILE_ADDING_HABIT, error);
+    console.error("Error while adding habit:", error);
     throw error; // Re-throw the error if you want to handle it in the calling component
   }
 }
@@ -167,6 +200,7 @@ export const getAllHabitsCalendar = (
       habitsByDates = {}; // Reset habitsByDates
       querySnapshot.docs.forEach((doc) => {
         const habit = { id: doc.id, ...doc.data() } as HabitsByDate;
+        console.log(habit.date);
         const date = habit.date.toDate();
         const dateKey = `${date.getFullYear()}/${
           date.getMonth() + 1
@@ -319,14 +353,18 @@ export const getCurrentStreak = (
 export async function deleteHabit(
   currentUser: UserInfo,
   store: Firestore,
-  habitId: string
+  habitId: string,
+  userHabitId: string
 ): Promise<void> {
   if (!currentUser) {
     throw new Error(ERROR_MESSAGE.USER_NOT_AUTHENTICATED);
   }
 
   try {
-    const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habitId);
+    const habitDoc = doc(
+      collection(store, FB_COLLECTION.USER_HABITS),
+      userHabitId
+    );
     const habitSnapshot = await getDoc(habitDoc);
 
     if (!habitSnapshot.exists()) {
@@ -337,7 +375,17 @@ export async function deleteHabit(
       throw new Error(ERROR_MESSAGE.USER_NOT_AUTHORIZED);
     }
 
-    await deleteDoc(habitDoc);
+    const userHabitData = habitSnapshot.data() as HabitsByDate;
+    console.log(habitId);
+    const habitIndex = userHabitData.habits.findIndex((h) => h.id === habitId);
+    console.log("index", habitIndex);
+    if (habitIndex === -1) {
+      throw new Error(ERROR_MESSAGE.HABIT_NOT_FOUND);
+    }
+
+    userHabitData.habits.splice(habitIndex, 1);
+
+    await updateDoc(habitDoc, userHabitData);
   } catch (error) {
     console.error(ERROR_MESSAGE.WHILE_SUPPRESSING_HABIT, error);
     throw error;
@@ -347,23 +395,42 @@ export async function deleteHabit(
 export async function updateHabit(
   currentUser: UserInfo,
   store: Firestore,
-  habit: Omit<Habits, "user">
+  habit: Omit<HabitElement, "isChecked">,
+  userHabitId: string
 ): Promise<void> {
   if (!currentUser) {
     throw new Error(ERROR_MESSAGE.USER_NOT_AUTHENTICATED);
   }
+  console.log(habit);
 
   try {
-    const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habit.id);
-    await updateDoc(habitDoc, habit);
+    const userHabitDocRef = doc(store, "user_habits", userHabitId);
+    const userHabitDoc = await getDoc(userHabitDocRef);
+    if (!userHabitDoc.exists()) {
+      throw new Error(ERROR_MESSAGE.HABIT_NOT_FOUND);
+    }
+
+    const userHabitData = userHabitDoc.data() as HabitsByDate;
+    const habitIndex = userHabitData.habits.findIndex((h) => h.id === habit.id);
+    if (habitIndex === -1) {
+      throw new Error(ERROR_MESSAGE.HABIT_NOT_FOUND);
+    }
+
+    userHabitData.habits[habitIndex] = { ...habit, isChecked: false };
+    await updateDoc(userHabitDocRef, userHabitData);
+
+    // const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habit.id);
+    // await updateDoc(habitDoc, habit);
   } catch (error) {
+    // const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habit.id);
+    // await updateDoc(habitDoc, habit);
     console.error(ERROR_MESSAGE.WHILE_UPDATING_HABIT, error);
     throw error;
   }
 }
 
 type UserHabit = {
-  date: string;
+  date: Timestamp;
   habits: Habits["id"][];
   user: UserInfo["uid"];
 };
@@ -377,16 +444,94 @@ export async function updateUserHabit(
     throw new Error(ERROR_MESSAGE.USER_NOT_AUTHENTICATED);
   }
 
+  console.log(userHabit);
+
   getHabitsByDate(currentUser, store, async (habitsByDate) => {
     if (habitsByDate) {
-      return;
+      // update the existing document with the new habits
+      try {
+        await updateDoc(
+          doc(collection(store, FB_COLLECTION.USER_HABITS), habitsByDate.id),
+          userHabit
+        );
+      } catch (error) {
+        console.error(ERROR_MESSAGE.WHILE_UPDATING_HABIT, error);
+        throw error;
+      }
+    } else {
+      try {
+        await addDoc(collection(store, FB_COLLECTION.USER_HABITS), userHabit);
+      } catch (error) {
+        console.error(ERROR_MESSAGE.WHILE_ADDING_HABIT, error);
+        throw error;
+      }
     }
-    
-    // try {
-    //   await addDoc(collection(store, FB_COLLECTION.USER_HABITS), userHabit);
-    // } catch (error) {
-    //   console.error(ERROR_MESSAGE.WHILE_ADDING_HABIT, error);
-    //   throw error;
-    // }
   });
+}
+
+export function getHabitsToday(
+  currentUser: Pick<UserInfo, "uid">,
+  store: Firestore,
+  callback: (habits: Habits[] | null) => void
+): Unsubscribe {
+  if (!currentUser) {
+    callback(null);
+    return () => {};
+  }
+
+  const startOfDay = Timestamp.fromDate(
+    new Date(new Date().setHours(0, 0, 0, 0))
+  );
+  const endOfDay = Timestamp.fromDate(
+    new Date(new Date().setHours(23, 59, 59, 999))
+  );
+
+  // Query for all user habits
+  const allHabitsQuery = query(
+    collection(store, FB_COLLECTION.HABITS),
+    where("user", "==", currentUser.uid)
+  );
+
+  // Query for user habits for today
+  const userHabitsQuery = query(
+    collection(store, FB_COLLECTION.USER_HABITS),
+    where("user", "==", currentUser.uid),
+    where("date", ">=", startOfDay),
+    where("date", "<=", endOfDay)
+  );
+
+  let unsubscribeAllHabits = () => {};
+  let unsubscribeUserHabits = () => {};
+
+  unsubscribeAllHabits = onSnapshot(allHabitsQuery, (allHabitsSnapshot) => {
+    const habits = allHabitsSnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as Habits)
+    );
+
+    unsubscribeUserHabits = onSnapshot(
+      userHabitsQuery,
+      (userHabitsSnapshot) => {
+        let userHabits = [];
+        if (!userHabitsSnapshot.empty) {
+          userHabits = userHabitsSnapshot.docs[0].data().habits || [];
+        }
+
+        const habitsCheckedToday = habits.map((habit) => ({
+          ...habit,
+          checked: userHabits.includes(habit.id),
+        }));
+
+        callback(habitsCheckedToday);
+      },
+      (error) => {
+        console.error(ERROR_MESSAGE.WHILE_FETCHING_HABITS, error);
+        callback(null);
+      }
+    );
+  });
+
+  return () => {
+    unsubscribeAllHabits();
+    unsubscribeUserHabits();
+  };
 }

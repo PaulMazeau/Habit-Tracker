@@ -28,9 +28,10 @@ import { FB_AUTH, FB_DB } from "../../firebaseconfig";
 
 interface Props {
   habits: Habits[];
+  userHabitId: string;
 }
 
-const CreateHabitBottomSheet = ({ habits }: Props) => {
+const CreateHabitBottomSheet = ({ habits, userHabitId }: Props) => {
   const { profile } = useUser();
   const [newHabits, setNewHabits] = useState<
     Pick<Habits, "user" | "name" | "id">[]
@@ -80,7 +81,8 @@ const CreateHabitBottomSheet = ({ habits }: Props) => {
 
     if (filterKey === "id") {
       // delete habit from database
-      deleteHabit(FB_AUTH.currentUser, FB_DB, id);
+      console.log(id);
+      deleteHabit(FB_AUTH.currentUser, FB_DB, id, userHabitId);
     }
   };
 
@@ -90,12 +92,13 @@ const CreateHabitBottomSheet = ({ habits }: Props) => {
       (habit) => !habits.some((h) => h.name === habit.name)
     );
     filteredHabits.forEach((habit) => {
-      addHabit(FB_AUTH.currentUser, FB_DB, { name: habit.name });
+      addHabit(FB_AUTH.currentUser, FB_DB, { name: habit.name }, userHabitId);
     });
     setInputValue("");
   };
 
   const closeBottomSheet = () => {
+    handleAddHabits();
     bottomSheetModalRef.current?.close();
   };
 
@@ -151,16 +154,18 @@ const CreateHabitBottomSheet = ({ habits }: Props) => {
                 item={habit}
                 onDelete={() => handleDelete(habit.name, habit.id)}
                 enableEdit={habits.includes(habit)}
+                userHabitId={userHabitId}
               ></SwipeableItem>
             </View>
           ))}
           <View style={{ flex: 1 }}></View>
-          <View style={styles.buttonContainer}>
-            <Button
-              title="+ Ajouter l'habitude"
+          <View>
+            <TouchableOpacity
+              style={styles.buttonContainer}
               onPress={closeBottomSheet}
-              color="white"
-            />
+            >
+              <Text style={styles.buttonText}>+ Ajouter l'habitude</Text>
+            </TouchableOpacity>
           </View>
         </BottomSheetView>
       </BottomSheetModal>
@@ -223,6 +228,12 @@ const styles = StyleSheet.create({
     alignContent: "center",
     marginBottom: 50,
     height: 48,
+    fontWeight: "600",
+  },
+  buttonText: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 16,
     fontWeight: "600",
   },
   habit: {

@@ -6,7 +6,7 @@ import { updateHabit } from "../../services/habits";
 import { FB_AUTH, FB_DB } from "../../firebaseconfig";
 import Button from "./Button";
 
-const SwipeableItem = ({ item, onDelete, enableEdit }) => {
+const SwipeableItem = ({ item, onDelete, enableEdit, userHabitId }) => {
   const [newName, setNewName] = React.useState(item.name);
   const [isEditing, setIsEditing] = React.useState(false);
 
@@ -18,10 +18,15 @@ const SwipeableItem = ({ item, onDelete, enableEdit }) => {
 
   const handleUpdateHabit = async () => {
     try {
-      await updateHabit(FB_AUTH.currentUser, FB_DB, {
-        id: item.id,
-        name: newName,
-      });
+      await updateHabit(
+        FB_AUTH.currentUser,
+        FB_DB,
+        {
+          id: item.id,
+          name: newName,
+        },
+        userHabitId
+      );
       console.log("Habit updated successfully");
       handleToggleEdit();
     } catch (error) {

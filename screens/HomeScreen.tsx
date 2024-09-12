@@ -1,101 +1,68 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, TextInput } from "react-native";
-import Button from "../component/Reusable/Button";
-import { useNavigation } from "@react-navigation/native";
-import { FB_AUTH, FB_DB } from "../firebaseconfig";
-import { signOut } from "firebase/auth";
-import { useUser } from "../context/UserContext";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { StyleSheet, View, Text } from "react-native";
 import {
-  addHabit,
-  deleteHabit,
-  getHabits,
-  getHabitsByDate,
-  updateHabit,
-} from "../services/habits";
-import { Habits } from "../types/habits";
-import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
+  getFirestore,
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  updateDoc,
+  Timestamp,
+} from "firebase/firestore";
+import { useUser } from "../context/UserContext";
 import CheckInput from "../component/Reusable/CheckInput";
+import Header from "../component/Reusable/Header";
+import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
 import Svg, { Circle, G } from "react-native-svg";
 import Animated, {
   Easing,
-  interpolate,
-  useSharedValue,
   withTiming,
+  useSharedValue,
   useAnimatedProps,
 } from "react-native-reanimated";
-import Header from "../component/Reusable/Header";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
-  const { profile } = useUser(); // Utiliser le hook useUser pour accéder au profil
-  const [habits, setHabits] = useState<Habits[]>([]);
-
-  const handleSignOut = () => {
-    signOut(FB_AUTH)
-      .then(() => {
-        navigation.reset({
-          index: 0,
-          //@ts-ignore
-          routes: [{ name: "Auth" }],
-        });
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la déconnexion:", error);
-      });
-  };
-
-  const [progress, setProgress] = useState(0); // la progression en pourcentage (0 à 1)
+  const { profile } = useUser();
+  const [habits, setHabits] = useState([]);
+  const [habitsDocId, setHabitsDocId] = useState("");
+  const [progress, setProgress] = useState(0); // Progress as a percentage (0 to 1)
   const progressAnimated = useSharedValue(0);
-  // const [checkedHabitsId , setCheckedHabitsId] = useState<string[]>([]);
+  const firestore = getFirestore();
 
-  const handleCheckHabit = (id: string) => {
-    console.log("id", id);
-
-    setHabits((prevHabits) =>
-      prevHabits.map((habit) =>
-        habit.id === id ? { ...habit, checked: !habit.checked } : habit
-      )
-    );
-  };
-
+  // Fetch habits directly from the 'user_habits' collection
   useEffect(() => {
     let unsubscribeToGetHabits = () => {};
-    let unsubscribeToGetHabitsByDate = () => {};
 
     if (profile?.uid) {
-      unsubscribeToGetHabits = getHabits(profile, FB_DB, (allHabits) => {
-        setHabits(allHabits);
-      });
-
-      unsubscribeToGetHabitsByDate = getHabitsByDate(
-        profile,
-        FB_DB,
-        (todayHabits) => {
-          setHabits((prev) => {
-            const todayHabitsId = todayHabits?.habits as Habits["id"][];
-            const allHabits = prev;
-            const allHabitsWithChecked = allHabits.map((habit) => {
-              const isCheckedToday = todayHabitsId?.includes(habit.id);
-              habit.checked = isCheckedToday;
-              return habit;
-            });
-
-            return allHabitsWithChecked;
-          });
-        }
+      const habitsQuery = query(
+        collection(firestore, "user_habits"),
+        where("user", "==", profile.uid)
       );
+
+      unsubscribeToGetHabits = onSnapshot(habitsQuery, (snapshot) => {
+        if (!snapshot.empty) {
+          const habitsData = snapshot.docs[0].data().habits;
+          const docId = snapshot.docs[0].id;
+          console.log(docId);
+          setHabitsDocId(docId);
+          setHabits(habitsData);
+          setProgress(
+            habitsData.filter((habit) => habit.isChecked).length /
+              habitsData.length
+          );
+        }
+      });
     }
 
     return () => {
-      unsubscribeToGetHabitsByDate();
       unsubscribeToGetHabits();
     };
-  }, [profile]);
+  }, [profile, firestore]);
 
   useEffect(() => {
-    // Anime la progression du cercle lorsqu'on coche la case
     progressAnimated.value = withTiming(progress, {
       duration: 500,
       easing: Easing.inOut(Easing.ease),
@@ -106,12 +73,34 @@ export default function HomeScreen() {
   const strokeWidth = 10;
   const circumference = 2 * Math.PI * radius;
 
-  // Remplir le cercle
   const animatedProps = useAnimatedProps(() => {
     return {
       strokeDashoffset: circumference - circumference * progressAnimated.value,
     };
   });
+
+  // Memoize the habits list to avoid unnecessary renders
+  // Memoize the handleToggleHabit function to avoid creating a new function on every render
+  const handleToggleHabit = (id) => {
+    console.log(id, "clicked");
+    const updatedHabits = habits.map((habit, index) =>
+      habit.name === id ? { ...habit, isChecked: !habit.isChecked } : habit
+    );
+
+    console.log(updatedHabits);
+
+    setHabits(updatedHabits);
+
+    const checkedHabits = updatedHabits.filter((habit) => habit.isChecked);
+
+    // Update habits in Firebase
+    const docRef = doc(firestore, "user_habits", habitsDocId);
+    updateDoc(docRef, {
+      date: Timestamp.now(),
+      habits: updatedHabits,
+      user: profile.uid,
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -142,34 +131,17 @@ export default function HomeScreen() {
         </Svg>
       </View>
 
-      {/* 
-        
-        Permet de test pour animer le cercle
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setProgress((prev) => (prev < 1 ? prev + 0.25 : 0))} // Simule une case cochée changez la valeur 0.25 en fonction du nombre de tâches
-        >
-          <View style={styles.checkbox}>
-            <View
-              style={[
-                styles.checkboxIndicator,
-                progress >= 1 && styles.checked,
-              ]}
-            />
-          </View>
-          </TouchableOpacity> */}
-
       <Text style={styles.subtitle}>Mes habitudes</Text>
-      {habits.map((habit) => (
+      {habits.map((habit, index) => (
         <CheckInput
-          key={habit.id}
-          id={habit.id}
+          key={index}
+          id={habit.name}
           content={habit.name}
-          isChecked={habit.checked}
+          isChecked={habit.isChecked}
+          onToggle={handleToggleHabit}
         />
       ))}
-      <CreateHabitBottomSheet habits={habits} />
+      <CreateHabitBottomSheet habits={habits} userHabitId={habitsDocId} />
     </View>
   );
 }
@@ -179,27 +151,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FCF8F5",
   },
-  checkbox: {
-    width: 50,
-    height: 50,
-    borderWidth: 2,
-    borderColor: "black",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  checkboxIndicator: {
-    width: 20,
-    height: 20,
-    backgroundColor: "transparent",
-  },
-  checked: {
-    backgroundColor: "green",
-  },
-  button: {
-    marginTop: 20,
-  },
   circle: {
-    display: "flex",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 40,
