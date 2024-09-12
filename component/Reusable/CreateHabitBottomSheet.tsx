@@ -3,7 +3,7 @@ import CustomBackdrop from "../../component/Reusable/CustomBackdrop";
 import CustomHandle from "../../component/Reusable/CustomHandle";
 import { ChangeEvent, useCallback, useMemo, useRef, useState } from "react";
 import { Text, View, StyleSheet, TextInput } from "react-native";
-import { HabitsType } from "../../types/habits";
+import { Habits } from "../../types/habits";
 import Button from "./Button";
 import { useUser } from "../../context/UserContext";
 
@@ -11,14 +11,16 @@ export default function CreateHabitBottomSheet() {
   const { profile } = useUser();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["20%", "70%"], []);
-  const [habits, setHabits] = useState<HabitsType[]>([]);
+  const [habits, setHabits] = useState<Pick<Habits, "user" | "name">[]>([]);
 
   const handleInputChange = (text: string) => {
-    console.log(text);
-
     const habits = text
       .split(",")
-      .map((habit) => ({ name: habit, user: profile.firstName }));
+      .map((habit) => ({ name: habit, user: profile.uid })) as Pick<
+      Habits,
+      "user" | "name"
+    >[];
+
     setHabits(habits);
   };
 
