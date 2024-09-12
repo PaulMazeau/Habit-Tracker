@@ -13,6 +13,7 @@ import {
 } from "../services/habits";
 import { Habits } from "../types/habits";
 import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
+import CheckInput from "../component/Reusable/CheckInput";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -32,6 +33,17 @@ export default function HomeScreen() {
       });
   };
 
+  const handleCheckHabit = (id: string) => {
+    console.log("id", id);
+    
+    setHabits((prevHabits) =>
+      prevHabits.map((habit) =>
+        habit.id === id ? { ...habit, checked: !habit.checked } : habit
+      )
+    );
+
+  }
+
   useEffect(() => {
     let unsubscribe = () => {};
 
@@ -50,7 +62,14 @@ export default function HomeScreen() {
         Bienvenue {profile.FirstName} {profile.LastName}
       </Text>
       {habits.map((habit) => (
-        <Text key={habit.id}>{habit.name}</Text>
+        <CheckInput
+          key={habit.id}
+          id={habit.id}
+          content={habit.name}
+          checked={habit.checked}
+          onChange={() => handleCheckHabit(habit.id)}
+        />
+        // <Text key={habit.id}>{habit.name}</Text>
       ))}
       <Button title="Déconnexion" onPress={handleSignOut} />
       <CreateHabitBottomSheet />

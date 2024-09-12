@@ -11,7 +11,7 @@ import {
   getDoc,
   updateDoc,
 } from "firebase/firestore";
-import { Habits } from "../types/habits";
+import { Habits, HabitsByDate } from "../types/habits";
 import { UserInfo } from "firebase/auth";
 
 const ERROR_MESSAGE = {
@@ -25,7 +25,7 @@ const ERROR_MESSAGE = {
 };
 
 export function getHabits(
-  currentUser: UserInfo,
+  currentUser: Pick<UserInfo, "uid">,
   store: Firestore,
   callback: (habits: Habits[]) => void
 ): Unsubscribe {
@@ -79,6 +79,69 @@ export async function addHabit(
     throw error; // Re-throw the error if you want to handle it in the calling component
   }
 }
+
+export const getAllHabitsCalendar = (
+  currentUser: Pick<UserInfo, "uid">,
+  store: any,
+  callback: (habitsByDates: {
+    [key: string]: { totalHabits: number; habits: number };
+  }) => void
+): Unsubscribe => {
+  if (!currentUser) {
+    callback({});
+    return () => {};
+  }
+
+  let totalHabits = 0;
+  let habitsByDates: {
+    [key: string]: { totalHabits: number; habits: number };
+  } = {};
+
+  const habitsUnsubscribe = getHabits(currentUser, store, (habits) => {
+    totalHabits = habits.length;
+    updateHabitsByDates();
+  });
+
+  const userHabitsUnsubscribe = onSnapshot(
+    query(
+      collection(store, "user_habits"),
+      where("user", "==", currentUser.uid)
+    ),
+    (querySnapshot) => {
+      habitsByDates = {}; // Reset habitsByDates
+      querySnapshot.docs.forEach((doc) => {
+        const habit = { id: doc.id, ...doc.data() } as HabitsByDate;
+        const date = habit.date.toDate();
+        const dateKey = `${date.getFullYear()}/${
+          date.getMonth() + 1
+        }/${date.getDate()}`;
+
+        if (!habitsByDates[dateKey]) {
+          habitsByDates[dateKey] = { totalHabits, habits: 0 };
+        }
+        habitsByDates[dateKey].habits = habit.habits.length;
+      });
+
+      updateHabitsByDates();
+    },
+    (error) => {
+      console.error("Error fetching user habits:", error);
+      callback({});
+    }
+  );
+
+  function updateHabitsByDates() {
+    Object.keys(habitsByDates).forEach((key) => {
+      habitsByDates[key].totalHabits = totalHabits;
+    });
+    callback({ ...habitsByDates }); // Create a new object to trigger updates
+  }
+
+  return () => {
+    habitsUnsubscribe();
+    userHabitsUnsubscribe();
+  };
+};
 
 export async function deleteHabit(
   currentUser: UserInfo,
