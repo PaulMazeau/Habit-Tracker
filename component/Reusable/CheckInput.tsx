@@ -47,41 +47,42 @@ function CheckInput({ id, content, isChecked }: CheckInputProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    display: "flex",
-    borderRadius: 5,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    backgroundColor: "#F3EFEE",
-    gap: 10,
-    width: "80%",
-    justifyContent: "flex-start",
-    marginBottom: 10,
-  },
-  text: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  check: {
-    position: "relative",
-    fontSize: 16,
-    fontWeight: "500",
-    aspectRatio: 1,
-    height: "auto",
-    width: "8%",
-    backgroundColor: "white",
-    borderColor: "#BBB5B5",
-    borderWidth: 1,
-    borderRadius: 4,
-  },
-  checkLogo: {
-    aspectRatio: 1,
-    width: "100%",
-    height: "auto",
-    position: "absolute",
-    top: 0,
-  },
+    container: {
+        display : 'flex',
+        borderRadius: 5,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+        backgroundColor : '#F3EFEE',
+        gap : 10,
+        width : '95%',
+        justifyContent : 'flex-start',
+        marginBottom : 10,
+        marginHorizontal: '2.5%'
+    },
+    text: {
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    check: {
+        position : 'relative',
+        fontSize: 16,
+        fontWeight: '500',
+        aspectRatio : 1,
+        height : 'auto',
+        width : '8%',
+        backgroundColor : "white",
+        borderColor : '#BBB5B5',
+        borderWidth : 1,
+        borderRadius : 4,
+    },
+    checkLogo: {
+        aspectRatio : 1,
+        width : '100%',
+        height : 'auto',
+        position : "absolute",
+        top : 0,
+    }
 });
 
 export default CheckInput;
