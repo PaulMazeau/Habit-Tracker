@@ -1,45 +1,121 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Button, TextInput, TouchableOpacity } from 'react-native';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Button,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 import {
   BottomSheetModal,
   BottomSheetView,
   BottomSheetModalProvider,
   BottomSheetBackdrop,
-} from '@gorhom/bottom-sheet';
-import { useUser } from '../../context/UserContext';
-import { Habits } from '../../types/habits';
+} from "@gorhom/bottom-sheet";
+import { useUser } from "../../context/UserContext";
+import { Habits } from "../../types/habits";
+import SwipeableItem from "./SwipeableItem";
+import { deleteHabit, addHabit, updateHabit } from "../../services/habits";
+import { FB_AUTH, FB_DB } from "../../firebaseconfig";
 
-const App = () => {
+interface Props {
+  habits: Habits[];
+}
+
+const App = ({ habits }: Props) => {
   const { profile } = useUser();
-  const [habits, setHabits] = useState<Pick<Habits, "user" | "name">[]>([]);
+  const [newHabits, setNewHabits] = useState<
+    Pick<Habits, "user" | "name" | "id">[]
+  >([]);
+  const [inputValue, setInputValue] = useState("");
   // ref
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // variables
-  const snapPoints = useMemo(() => ['25%', '80%'], []);
+  const snapPoints = useMemo(() => ["25%", "80%"], []);
 
   // callbacks
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
   const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index);
+    console.log("handleSheetChanges", index);
   }, []);
 
   const handleInputChange = (text: string) => {
-    const habits = text
+    const newHabits = text
       .split(",")
       .map((habit) => ({ name: habit.trim(), user: profile.uid })) as Pick<
       Habits,
-      "user" | "name"
+      "user" | "name" | "id"
     >[];
+    setInputValue(text);
+    setNewHabits([...habits, ...newHabits]);
+  };
 
-    setHabits(habits);
+  const handleUpdateInputChange = (text: string) => {
+    setEditingHabitText(text);
+  };
+
+  const handleDelete = (name: string, id?: string) => {
+    console.log("delete", id, name);
+
+    const filterKey = id ? "id" : "name";
+    const filterValue = name || id;
+
+    const filteredHabits = newHabits.filter(
+      (habit) => habit[filterKey] !== filterValue
+    );
+
+    const inputValue = filteredHabits
+      .filter((habit) => !habits.some((h) => h.id === habit.id))
+      .map((habit) => habit.name)
+      .join(",");
+
+    setNewHabits([...filteredHabits]);
+    setInputValue(inputValue);
+
+    if (filterKey === "id") {
+      // delete habit from database
+      deleteHabit(FB_AUTH.currentUser, FB_DB, id);
+    }
+  };
+
+  const handleUpdate = (text: string, id: string) => {
+    console.log("update", id, text);
+    updateHabit(FB_AUTH.currentUser, FB_DB, { name: text, id });
+    setIsEditingHabit(false);
+  };
+
+  const handleEditClick = () => {
+    setIsEditingHabit(true);
+  };
+
+  const handleAddHabits = () => {
+    // Filter new habits that are not already in the database
+    const filteredHabits = newHabits.filter(
+      (habit) => !habits.some((h) => h.name === habit.name)
+    );
+    filteredHabits.forEach((habit) => {
+      addHabit(FB_AUTH.currentUser, FB_DB, { name: habit.name });
+    });
+    setInputValue("");
   };
 
   const closeBottomSheet = () => {
     bottomSheetModalRef.current?.close();
   };
+
+  useEffect(() => {
+    setNewHabits(habits);
+  }, [habits]);
 
   // renders
   return (
@@ -49,7 +125,9 @@ const App = () => {
           style={styles.addButton}
           onPress={handlePresentModalPress}
         >
-          <Text style={styles.addButtonText}>+ Ajouter une habitude</Text>
+          <Text style={styles.addButtonText} onPress={handleAddHabits}>
+            + Ajouter une habitude
+          </Text>
         </TouchableOpacity>
 
         <BottomSheetModal
@@ -62,7 +140,7 @@ const App = () => {
               {...props}
               disappearsOnIndex={-1}
               appearsOnIndex={0}
-              opacity={0.5}  
+              opacity={0.5}
             />
           )}
         >
@@ -78,13 +156,18 @@ const App = () => {
                 style={styles.input}
                 placeholder="méditer,faire un popo,boire de l'eau"
                 onChangeText={handleInputChange}
+                value={inputValue}
               />
             </View>
             <Text style={styles.subTitle}>Habitudes à ajouter :</Text>
-            {habits.map((habit, index) => (
-              <Text style={styles.habit} key={index}>
-                {habit.name}
-              </Text>
+            {newHabits.map((habit, index) => (
+              <View key={index}>
+                <SwipeableItem
+                  item={habit}
+                  onDelete={() => handleDelete(habit.name, habit.id)}
+                  enableEdit={habits.includes(habit)}
+                ></SwipeableItem>
+              </View>
             ))}
             <View style={{ flex: 1 }}></View>
             <View style={styles.buttonContainer}>
@@ -100,7 +183,7 @@ const App = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
   },
   contentContainer: {
     paddingVertical: 30,
@@ -113,18 +196,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   addButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 30,
     right: 20,
-    backgroundColor: '#172ACE',
+    backgroundColor: "#172ACE",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
   },
   addButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   title: {
     fontSize: 24,
@@ -153,7 +236,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0049AC",
     borderRadius: 13,
     justifyContent: "center",
-    alignContent: 'center', 
+    alignContent: "center",
     marginBottom: 20,
   },
   habit: {
@@ -162,7 +245,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     borderRadius: 5,
   },
-  
 });
 
 export default App;

@@ -36,14 +36,13 @@ export default function HomeScreen() {
 
   const handleCheckHabit = (id: string) => {
     console.log("id", id);
-    
+
     setHabits((prevHabits) =>
       prevHabits.map((habit) =>
         habit.id === id ? { ...habit, checked: !habit.checked } : habit
       )
     );
-
-  }
+  };
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -80,7 +79,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Header title="Aujourd'hui" />
       <View style={styles.circle}>
-        <Svg height="260" width="260" viewBox="0 0 120 120"> 
+        <Svg height="260" width="260" viewBox="0 0 120 120">
           <G transform={`rotate(-90, 60, 60)`}>
             <Circle
               cx="60"
@@ -105,8 +104,7 @@ export default function HomeScreen() {
         </Svg>
       </View>
 
-        
-        {/* 
+      {/* 
         
         Permet de test pour animer le cercle
 
@@ -124,7 +122,6 @@ export default function HomeScreen() {
           </View>
           </TouchableOpacity> */}
 
-
       <Text style={styles.subtitle}>Mes habitudes</Text>
       {habits.map((habit) => (
         <CheckInput
@@ -137,8 +134,7 @@ export default function HomeScreen() {
         // <Text key={habit.id}>{habit.name}</Text>
       ))}
 
-
-      <CreateHabitBottomSheet />
+      <CreateHabitBottomSheet habits={habits} />
     </View>
   );
 }
@@ -174,9 +170,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   subtitle: {
-    marginLeft: '2.5%',
+    marginLeft: "2.5%",
     fontWeight: "600",
     fontSize: 16,
     marginBottom: 12,
-  }
+  },
 });

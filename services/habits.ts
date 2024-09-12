@@ -182,7 +182,7 @@ export async function updateHabit(
 
   try {
     const habitDoc = doc(collection(store, "habits"), habit.id);
-    await updateDoc(habitDoc, habit);
+    await updateDoc(habitDoc, { name: habit.name, user: currentUser.uid });
   } catch (error) {
     console.error(ERROR_MESSAGE.WHILE_UPDATING_HABIT, error);
     throw error;
