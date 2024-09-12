@@ -43,8 +43,12 @@ export default function ProfileScreen() {
       <Header title={`${profile.FirstName} ${profile.LastName}`} />
       <View style={styles.container}>
         <Text style={styles.subtitle}>Mes Statistiques</Text>
+          <Text style={styles.text}>Allez! Plus que 2 jours pour démarrer une streak.</Text>
         <Text style={styles.subtitle}>Mes Badges</Text>
-        <Button title="Déconnexion" onPress={handleSignOut} />
+          <Text style={styles.text}>Continue de réaliser tes objectifs quotidien pour gagner des badges.</Text>
+        <View style={styles.button}>
+          <Button title="Déconnexion" onPress={handleSignOut}/>
+        </View>
       </View>
     </View>
   );
@@ -58,13 +62,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 8,
+    marginTop: 30,
   },
   subtitle: {
     fontSize: 20,
     fontWeight: "700",
   },
   button: {
-    marginTop: 20,
+    marginTop: 350,
   },
   checkbox: {
     width: 50,
@@ -82,4 +87,9 @@ const styles = StyleSheet.create({
   checked: {
     backgroundColor: "green",
   },
+  text: {
+    marginVertical: 30,
+    justifyContent: "center",
+    textAlign: "center",
+  }
 });
