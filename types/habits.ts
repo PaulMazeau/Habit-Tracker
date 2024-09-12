@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-export type Habits = {
-  id: string;
-=======
 import { Timestamp } from "firebase/firestore";
 
-export type HabitsType = {
-  id?: string;
->>>>>>> dev
+export type Habits = {
+  id: string;
   name: string;
   user: string;
   checked?: boolean;

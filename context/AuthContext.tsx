@@ -39,7 +39,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(FB_AUTH, (user) => {
       setCurrentUser(user);
-      console.log(user);
       setLoading(false); // Données chargées ou utilisateur non connecté
     });
 
