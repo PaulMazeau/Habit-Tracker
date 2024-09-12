@@ -81,7 +81,8 @@ const App = ({ habits, userHabitId }: Props) => {
 
     if (filterKey === "id") {
       // delete habit from database
-      deleteHabit(FB_AUTH.currentUser, FB_DB, id);
+      console.log(id);
+      deleteHabit(FB_AUTH.currentUser, FB_DB, id, userHabitId);
     }
   };
 

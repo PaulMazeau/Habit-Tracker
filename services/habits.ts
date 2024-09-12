@@ -16,10 +16,10 @@ import {
   arrayUnion,
   setDoc,
 } from "firebase/firestore";
-import { Habits, HabitsByDate } from "../types/habits";
+import { HabitElement, Habits, HabitsByDate } from "../types/habits";
 import { UserInfo } from "firebase/auth";
 // import uid
-import { v4 as uuidv4 } from "uuid";
+import { makeid } from "../utils/utils";
 
 const ERROR_MESSAGE = {
   USER_NOT_AUTHENTICATED: "User not authenticated",
@@ -143,7 +143,7 @@ export async function addHabit(
       // If the document exists, add the new habit to the "habits" array
       await updateDoc(userHabitDocRef, {
         habits: arrayUnion({
-          id: uuidv4(),
+          id: makeid(16),
           name: habit.name,
           isChecked: false, // default value for new habits
         }),
@@ -154,7 +154,7 @@ export async function addHabit(
       await setDoc(userHabitDocRef, {
         habits: [
           {
-            id: uuidv4(),
+            id: makeid(16),
             name: habit.name,
             isChecked: false, // default value for new habits
           },
@@ -353,14 +353,18 @@ export const getCurrentStreak = (
 export async function deleteHabit(
   currentUser: UserInfo,
   store: Firestore,
-  habitId: string
+  habitId: string,
+  userHabitId: string
 ): Promise<void> {
   if (!currentUser) {
     throw new Error(ERROR_MESSAGE.USER_NOT_AUTHENTICATED);
   }
 
   try {
-    const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habitId);
+    const habitDoc = doc(
+      collection(store, FB_COLLECTION.USER_HABITS),
+      userHabitId
+    );
     const habitSnapshot = await getDoc(habitDoc);
 
     if (!habitSnapshot.exists()) {
@@ -371,7 +375,17 @@ export async function deleteHabit(
       throw new Error(ERROR_MESSAGE.USER_NOT_AUTHORIZED);
     }
 
-    await deleteDoc(habitDoc);
+    const userHabitData = habitSnapshot.data() as HabitsByDate;
+    console.log(habitId);
+    const habitIndex = userHabitData.habits.findIndex((h) => h.id === habitId);
+    console.log("index", habitIndex);
+    if (habitIndex === -1) {
+      throw new Error(ERROR_MESSAGE.HABIT_NOT_FOUND);
+    }
+
+    userHabitData.habits.splice(habitIndex, 1);
+
+    await updateDoc(habitDoc, userHabitData);
   } catch (error) {
     console.error(ERROR_MESSAGE.WHILE_SUPPRESSING_HABIT, error);
     throw error;
@@ -381,7 +395,7 @@ export async function deleteHabit(
 export async function updateHabit(
   currentUser: UserInfo,
   store: Firestore,
-  habit: Omit<Habits, "user">,
+  habit: Omit<HabitElement, "isChecked">,
   userHabitId: string
 ): Promise<void> {
   if (!currentUser) {
@@ -396,9 +410,14 @@ export async function updateHabit(
       throw new Error(ERROR_MESSAGE.HABIT_NOT_FOUND);
     }
 
-    await updateDoc(userHabitDocRef, {
-      habits: arrayUnion(habit),
-    });
+    const userHabitData = userHabitDoc.data() as HabitsByDate;
+    const habitIndex = userHabitData.habits.findIndex((h) => h.id === habit.id);
+    if (habitIndex === -1) {
+      throw new Error(ERROR_MESSAGE.HABIT_NOT_FOUND);
+    }
+
+    userHabitData.habits[habitIndex] = { ...habit, isChecked: false };
+    await updateDoc(userHabitDocRef, userHabitData);
 
     // const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habit.id);
     // await updateDoc(habitDoc, habit);
