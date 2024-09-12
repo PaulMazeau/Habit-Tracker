@@ -10,6 +10,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  orderBy,
 } from "firebase/firestore";
 import { Habits, HabitsByDate } from "../types/habits";
 import { UserInfo } from "firebase/auth";
@@ -20,8 +21,15 @@ const ERROR_MESSAGE = {
   USER_NOT_AUTHORIZED: "You are not authorized to delete this habit",
   WHILE_SUPPRESSING_HABIT: "An error occurred while deleting the habit",
   WHILE_FETCHING_HABITS: "An error occurred while fetching habits",
+  WHILE_FETCHING_HABITS_BY_DATE:
+    "An error occurred while fetching habits by date",
   WHILE_ADDING_HABIT: "An error occurred while adding the habit",
   WHILE_UPDATING_HABIT: "An error occurred while updating the habit",
+};
+
+const FB_COLLECTION = {
+  HABITS: "habits",
+  USER_HABITS: "user_habits",
 };
 
 export function getHabits(
@@ -35,7 +43,7 @@ export function getHabits(
   }
 
   const q = query(
-    collection(store, "habits"),
+    collection(store, FB_COLLECTION.HABITS),
     where("user", "==", currentUser.uid)
   );
 
@@ -60,6 +68,54 @@ export function getHabits(
   return unsubscribe;
 }
 
+export function getHabitsByDate(
+  currentUser: Pick<UserInfo, "uid">,
+  store: Firestore,
+  callback: (habitsByDate: HabitsByDate | null) => void
+): Unsubscribe {
+  if (!currentUser) {
+    callback(null);
+    return () => {};
+  }
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const q = query(
+    collection(store, FB_COLLECTION.USER_HABITS),
+    where("user", "==", currentUser.uid),
+    where("date", ">=", startOfDay),
+    where("date", "<=", endOfDay)
+  );
+
+  const unsubscribe = onSnapshot(
+    q,
+    (querySnapshot) => {
+      console.log({ QUERY_SNAPSHOT: querySnapshot.empty });
+      if (querySnapshot.empty) {
+        callback(null);
+      } else {
+        const doc = querySnapshot.docs[0];
+        const habitsCheckedToday: HabitsByDate = {
+          id: doc.id,
+          date: doc.data().date,
+          user: doc.data().user,
+          habits: doc.data().habits,
+        };
+        callback(habitsCheckedToday);
+      }
+    },
+    (error) => {
+      console.error(ERROR_MESSAGE.WHILE_FETCHING_HABITS, error);
+      callback(null);
+    }
+  );
+
+  return unsubscribe;
+}
+
 export async function addHabit(
   currentUser: UserInfo,
   store: Firestore,
@@ -70,7 +126,7 @@ export async function addHabit(
   }
 
   try {
-    await addDoc(collection(store, "habits"), {
+    await addDoc(collection(store, FB_COLLECTION.HABITS), {
       ...habit,
       user: currentUser.uid, // Note: Changed 'user' to 'User' to match your schema
     });
@@ -104,7 +160,7 @@ export const getAllHabitsCalendar = (
 
   const userHabitsUnsubscribe = onSnapshot(
     query(
-      collection(store, "user_habits"),
+      collection(store, FB_COLLECTION.USER_HABITS),
       where("user", "==", currentUser.uid)
     ),
     (querySnapshot) => {
@@ -143,6 +199,123 @@ export const getAllHabitsCalendar = (
   };
 };
 
+export const getCurrentStreak = (
+  currentUser: Pick<UserInfo, "uid">,
+  store: any,
+  callback: (currentStreak: number) => void
+): Unsubscribe => {
+  if (!currentUser) {
+    callback(0);
+    return () => {};
+  }
+
+  let totalHabits = 0;
+  let habitsByDates: {
+    [key: string]: { totalHabits: number; habits: number };
+  } = {};
+
+  const habitsUnsubscribe = getHabits(currentUser, store, (habits) => {
+    totalHabits = habits.length;
+    // updateStreak();
+  });
+
+  const userHabitsUnsubscribe = onSnapshot(
+    query(
+      collection(store, "user_habits"),
+      where("user", "==", currentUser.uid),
+      orderBy("date", "desc")
+    ),
+    (querySnapshot) => {
+      habitsByDates = {}; // Reset habitsByDates
+      querySnapshot.docs.forEach((doc) => {
+        const habit = { id: doc.id, ...doc.data() } as HabitsByDate;
+        const date = habit.date.toDate();
+        const dateKey = `${date.getFullYear()}/${
+          date.getMonth() + 1
+        }/${date.getDate()}`;
+
+        if (!habitsByDates[dateKey]) {
+          habitsByDates[dateKey] = { totalHabits, habits: 0 };
+        }
+        habitsByDates[dateKey].habits = habit.habits.length;
+      });
+
+      updateStreak();
+    },
+    (error) => {
+      console.error("Error fetching user habits:", error);
+      callback(0); // Reset streak on error
+    }
+  );
+
+  function updateStreak() {
+    const today = new Date();
+    let streak = 0;
+
+    // Sort dates in descending order to check from the latest
+    const sortedDates = Object.keys(habitsByDates).sort(
+      (a, b) => new Date(b).getTime() - new Date(a).getTime()
+    );
+
+    // Helper function to check if two dates are consecutive
+    function areDatesConsecutive(date1: Date, date2: Date) {
+      const timeDiff = date1.getTime() - date2.getTime();
+      const dayDiff = timeDiff / (1000 * 60 * 60 * 24);
+      return dayDiff === 1;
+    }
+
+    let prevDate = today;
+    for (const dateKey of sortedDates) {
+      const { totalHabits, habits } = habitsByDates[dateKey];
+
+      console.log(sortedDates);
+
+      // Check if the user completed all habits for that day
+      if (totalHabits === habits) {
+        streak++; // Increment the streak
+
+        // Check if the day is consecutive to the previous one
+        const dateParts = dateKey.split("/");
+        const currentDate = new Date(
+          parseInt(dateParts[0], 10), // year
+          parseInt(dateParts[1], 10) - 1, // month (0-indexed)
+          parseInt(dateParts[2], 10) // day
+        );
+
+        // If the days are not consecutive, stop the streak
+        if (!areDatesConsecutive(prevDate, currentDate)) {
+          break;
+        }
+
+        prevDate = currentDate; // Move to the next day
+      } else {
+        break; // If the user missed any habit, break the loop and reset the streak
+      }
+    }
+
+    // Check today's habits as well
+    const todayKey = `${today.getFullYear()}/${
+      today.getMonth() + 1
+    }/${today.getDate()}`;
+
+    if (habitsByDates[todayKey]) {
+      const todayHabits = habitsByDates[todayKey];
+      if (todayHabits.totalHabits === todayHabits.habits) {
+        streak++; // Count today as part of the streak
+      }
+    }
+
+    console.log(streak);
+
+    callback(streak); // Pass the streak back to the callback
+  }
+
+  return () => {
+    habitsUnsubscribe();
+    userHabitsUnsubscribe();
+  };
+};
+
 export async function deleteHabit(
   currentUser: UserInfo,
   store: Firestore,
@@ -153,7 +326,7 @@ export async function deleteHabit(
   }
 
   try {
-    const habitDoc = doc(collection(store, "habits"), habitId);
+    const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habitId);
     const habitSnapshot = await getDoc(habitDoc);
 
     if (!habitSnapshot.exists()) {
@@ -181,10 +354,39 @@ export async function updateHabit(
   }
 
   try {
-    const habitDoc = doc(collection(store, "habits"), habit.id);
+    const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habit.id);
     await updateDoc(habitDoc, habit);
   } catch (error) {
     console.error(ERROR_MESSAGE.WHILE_UPDATING_HABIT, error);
     throw error;
   }
+}
+
+type UserHabit = {
+  date: string;
+  habits: Habits["id"][];
+  user: UserInfo["uid"];
+};
+
+export async function updateUserHabit(
+  currentUser: UserInfo,
+  store: Firestore,
+  userHabit: UserHabit
+): Promise<void> {
+  if (!currentUser) {
+    throw new Error(ERROR_MESSAGE.USER_NOT_AUTHENTICATED);
+  }
+
+  getHabitsByDate(currentUser, store, async (habitsByDate) => {
+    if (habitsByDate) {
+      return;
+    }
+    
+    // try {
+    //   await addDoc(collection(store, FB_COLLECTION.USER_HABITS), userHabit);
+    // } catch (error) {
+    //   console.error(ERROR_MESSAGE.WHILE_ADDING_HABIT, error);
+    //   throw error;
+    // }
+  });
 }

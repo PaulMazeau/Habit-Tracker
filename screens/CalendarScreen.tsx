@@ -4,7 +4,6 @@ import {
   View,
   Text,
   ScrollView,
-  Dimensions,
   findNodeHandle,
 } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
@@ -16,17 +15,6 @@ import { FB_DB } from "../firebaseconfig";
 import { getAllHabitsCalendar } from "../services/habits";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-
-const habitsByDates = {
-  "2024/1/1": {
-    totalHabits: 5,
-    habits: 3,
-  },
-  "2024/9/1": {
-    totalHabits: 5,
-    habits: 3,
-  },
-};
 
 const getDaysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
 

@@ -1,5 +1,18 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Button, TextInput, TouchableOpacity } from 'react-native';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Button,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 import {
   BottomSheetModal,
   BottomSheetView,
@@ -9,36 +22,86 @@ import { useUser } from '../../context/UserContext';
 import { Habits } from '../../types/habits';
 import AddButton from '../../assets/icons/AddButton.svg';
 
-const CreateHabitBottomSheet = () => {
+import SwipeableItem from "./SwipeableItem";
+import { deleteHabit, addHabit, updateHabit } from "../../services/habits";
+import { FB_AUTH, FB_DB } from "../../firebaseconfig";
+
+interface Props {
+  habits: Habits[];
+}
+
+const CreateHabitBottomSheet = ({ habits }: Props) => {
   const { profile } = useUser();
-  const [habits, setHabits] = useState<Pick<Habits, "user" | "name">[]>([]);
+  const [newHabits, setNewHabits] = useState<
+    Pick<Habits, "user" | "name" | "id">[]
+  >([]);
+  const [inputValue, setInputValue] = useState("");
   // ref
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // variables
-  const snapPoints = useMemo(() => ['25%', '80%'], []);
+  const snapPoints = useMemo(() => ["25%", "80%"], []);
 
   // callbacks
   const handlePresentModalPress = () => bottomSheetModalRef.current?.present();
   
   const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index);
+    console.log("handleSheetChanges", index);
   }, []);
 
   const handleInputChange = (text: string) => {
-    const habits = text
+    const newHabits = text
       .split(",")
       .map((habit) => ({ name: habit.trim(), user: profile.uid })) as Pick<
       Habits,
-      "user" | "name"
+      "user" | "name" | "id"
     >[];
+    setInputValue(text);
+    setNewHabits([...habits, ...newHabits]);
+  };
 
-    setHabits(habits);
+  const handleDelete = (name: string, id?: string) => {
+    console.log("delete", id, name);
+
+    const filterKey = id ? "id" : "name";
+    const filterValue = name || id;
+
+    const filteredHabits = newHabits.filter(
+      (habit) => habit[filterKey] !== filterValue
+    );
+
+    const inputValue = filteredHabits
+      .filter((habit) => !habits.some((h) => h.id === habit.id))
+      .map((habit) => habit.name)
+      .join(",");
+
+    setNewHabits([...filteredHabits]);
+    setInputValue(inputValue);
+
+    if (filterKey === "id") {
+      // delete habit from database
+      deleteHabit(FB_AUTH.currentUser, FB_DB, id);
+    }
+  };
+
+  const handleAddHabits = () => {
+    // Filter new habits that are not already in the database
+    const filteredHabits = newHabits.filter(
+      (habit) => !habits.some((h) => h.name === habit.name)
+    );
+    filteredHabits.forEach((habit) => {
+      addHabit(FB_AUTH.currentUser, FB_DB, { name: habit.name });
+    });
+    setInputValue("");
   };
 
   const closeBottomSheet = () => {
     bottomSheetModalRef.current?.close();
   };
+
+  useEffect(() => {
+    setNewHabits(habits);
+  }, [habits]);
 
   // renders
   return (
@@ -62,7 +125,7 @@ const CreateHabitBottomSheet = () => {
               {...props}
               disappearsOnIndex={-1}
               appearsOnIndex={0}
-              opacity={0.5}  
+              opacity={0.5}
             />
           )}
         >
@@ -78,13 +141,18 @@ const CreateHabitBottomSheet = () => {
                 style={styles.input}
                 placeholder="méditer,faire un popo,boire de l'eau"
                 onChangeText={handleInputChange}
+                value={inputValue}
               />
             </View>
             <Text style={styles.subTitle}>Habitudes à ajouter :</Text>
-            {habits.map((habit, index) => (
-              <Text style={styles.habit} key={index}>
-                {habit.name}
-              </Text>
+            {newHabits.map((habit, index) => (
+              <View key={index}>
+                <SwipeableItem
+                  item={habit}
+                  onDelete={() => handleDelete(habit.name, habit.id)}
+                  enableEdit={habits.includes(habit)}
+                ></SwipeableItem>
+              </View>
             ))}
             <View style={{ flex: 1 }}></View>
             <View style={styles.buttonContainer}>
@@ -98,7 +166,7 @@ const CreateHabitBottomSheet = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
   },
   contentContainer: {
     paddingVertical: 30,
@@ -116,9 +184,9 @@ const styles = StyleSheet.create({
     right: 20,
   },
   addButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   title: {
     fontSize: 24,
@@ -147,7 +215,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0049AC",
     borderRadius: 13,
     justifyContent: "center",
-    alignContent: 'center', 
+    alignContent: "center",
     marginBottom: 20,
     height: 48,
   },
@@ -157,7 +225,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     borderRadius: 5,
   },
-  
 });
 
 export default CreateHabitBottomSheet;
