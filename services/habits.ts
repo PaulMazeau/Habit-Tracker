@@ -11,6 +11,7 @@ import {
   getDoc,
   updateDoc,
   orderBy,
+  Timestamp,
 } from "firebase/firestore";
 import { Habits, HabitsByDate } from "../types/habits";
 import { UserInfo } from "firebase/auth";
@@ -78,10 +79,12 @@ export function getHabitsByDate(
     return () => {};
   }
 
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date();
-  endOfDay.setHours(23, 59, 59, 999);
+  const startOfDay = Timestamp.fromDate(
+    new Date(new Date().setHours(0, 0, 0, 0))
+  );
+  const endOfDay = Timestamp.fromDate(
+    new Date(new Date().setHours(23, 59, 59, 999))
+  );
 
   const q = query(
     collection(store, FB_COLLECTION.USER_HABITS),
@@ -167,6 +170,7 @@ export const getAllHabitsCalendar = (
       habitsByDates = {}; // Reset habitsByDates
       querySnapshot.docs.forEach((doc) => {
         const habit = { id: doc.id, ...doc.data() } as HabitsByDate;
+        console.log(habit.date);
         const date = habit.date.toDate();
         const dateKey = `${date.getFullYear()}/${
           date.getMonth() + 1
@@ -363,7 +367,7 @@ export async function updateHabit(
 }
 
 type UserHabit = {
-  date: string;
+  date: Timestamp;
   habits: Habits["id"][];
   user: UserInfo["uid"];
 };
@@ -381,7 +385,7 @@ export async function updateUserHabit(
     if (habitsByDate) {
       return;
     }
-    
+
     // try {
     //   await addDoc(collection(store, FB_COLLECTION.USER_HABITS), userHabit);
     // } catch (error) {

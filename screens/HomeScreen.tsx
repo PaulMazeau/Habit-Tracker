@@ -32,33 +32,8 @@ export default function HomeScreen() {
   const { profile } = useUser(); // Utiliser le hook useUser pour accéder au profil
   const [habits, setHabits] = useState<Habits[]>([]);
 
-  const handleSignOut = () => {
-    signOut(FB_AUTH)
-      .then(() => {
-        navigation.reset({
-          index: 0,
-          //@ts-ignore
-          routes: [{ name: "Auth" }],
-        });
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la déconnexion:", error);
-      });
-  };
-
   const [progress, setProgress] = useState(0); // la progression en pourcentage (0 à 1)
   const progressAnimated = useSharedValue(0);
-  // const [checkedHabitsId , setCheckedHabitsId] = useState<string[]>([]);
-
-  const handleCheckHabit = (id: string) => {
-    console.log("id", id);
-
-    setHabits((prevHabits) =>
-      prevHabits.map((habit) =>
-        habit.id === id ? { ...habit, checked: !habit.checked } : habit
-      )
-    );
-  };
 
   useEffect(() => {
     let unsubscribeToGetHabits = () => {};
@@ -95,7 +70,6 @@ export default function HomeScreen() {
   }, [profile]);
 
   useEffect(() => {
-    // Anime la progression du cercle lorsqu'on coche la case
     progressAnimated.value = withTiming(progress, {
       duration: 500,
       easing: Easing.inOut(Easing.ease),
@@ -142,24 +116,6 @@ export default function HomeScreen() {
         </Svg>
       </View>
 
-      {/* 
-        
-        Permet de test pour animer le cercle
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setProgress((prev) => (prev < 1 ? prev + 0.25 : 0))} // Simule une case cochée changez la valeur 0.25 en fonction du nombre de tâches
-        >
-          <View style={styles.checkbox}>
-            <View
-              style={[
-                styles.checkboxIndicator,
-                progress >= 1 && styles.checked,
-              ]}
-            />
-          </View>
-          </TouchableOpacity> */}
-
       <Text style={styles.subtitle}>Mes habitudes</Text>
       {habits.map((habit) => (
         <CheckInput
@@ -167,6 +123,8 @@ export default function HomeScreen() {
           id={habit.id}
           content={habit.name}
           isChecked={habit.checked}
+          habits={habits}
+          setHabits={setHabits}
         />
       ))}
       <CreateHabitBottomSheet habits={habits} />
