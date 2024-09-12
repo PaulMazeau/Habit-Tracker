@@ -5,14 +5,30 @@ import {
   onSnapshot,
   Unsubscribe,
   addDoc,
+  Firestore,
+  deleteDoc,
+  doc,
+  getDoc,
+  updateDoc,
 } from "firebase/firestore";
-import { HabitsByDate, HabitsType } from "../types/habits";
+import { Habits, HabitsByDate } from "../types/habits";
+import { UserInfo } from "firebase/auth";
 
-export const getHabits = (
-  currentUser,
-  store,
-  callback: (habits: HabitsType[]) => void
-): Unsubscribe => {
+const ERROR_MESSAGE = {
+  USER_NOT_AUTHENTICATED: "User not authenticated",
+  HABIT_NOT_FOUND: "Habit does not exist",
+  USER_NOT_AUTHORIZED: "You are not authorized to delete this habit",
+  WHILE_SUPPRESSING_HABIT: "An error occurred while deleting the habit",
+  WHILE_FETCHING_HABITS: "An error occurred while fetching habits",
+  WHILE_ADDING_HABIT: "An error occurred while adding the habit",
+  WHILE_UPDATING_HABIT: "An error occurred while updating the habit",
+};
+
+export function getHabits(
+  currentUser: Pick<UserInfo, "uid">,
+  store: Firestore,
+  callback: (habits: Habits[]) => void
+): Unsubscribe {
   if (!currentUser) {
     callback([]);
     return () => {};
@@ -31,21 +47,41 @@ export const getHabits = (
           ({
             id: doc.id,
             ...doc.data(),
-          } as HabitsType)
+          } as Habits)
       );
       callback(habits);
     },
     (error) => {
-      console.error("Error fetching habits:", error);
+      console.error(ERROR_MESSAGE.WHILE_FETCHING_HABITS, error);
       callback([]);
     }
   );
 
   return unsubscribe;
-};
+}
+
+export async function addHabit(
+  currentUser: UserInfo,
+  store: Firestore,
+  habit: Omit<Habits, "id" | "user">
+): Promise<void> {
+  if (!currentUser) {
+    return;
+  }
+
+  try {
+    await addDoc(collection(store, "habits"), {
+      ...habit,
+      user: currentUser.uid, // Note: Changed 'user' to 'User' to match your schema
+    });
+  } catch (error) {
+    console.error(ERROR_MESSAGE.WHILE_ADDING_HABIT, error);
+    throw error; // Re-throw the error if you want to handle it in the calling component
+  }
+}
 
 export const getAllHabitsCalendar = (
-  currentUser: { uid: string } | null,
+  currentUser: Pick<UserInfo, "uid">,
   store: any,
   callback: (habitsByDates: {
     [key: string]: { totalHabits: number; habits: number };
@@ -107,22 +143,48 @@ export const getAllHabitsCalendar = (
   };
 };
 
-export const addHabit = async (
-  currentUser,
-  store,
-  habit: Omit<HabitsType, "id" | "User">
-): Promise<void> => {
+export async function deleteHabit(
+  currentUser: UserInfo,
+  store: Firestore,
+  habitId: string
+): Promise<void> {
   if (!currentUser) {
-    return;
+    throw new Error(ERROR_MESSAGE.USER_NOT_AUTHENTICATED);
   }
 
   try {
-    await addDoc(collection(store, "habits"), {
-      ...habit,
-      User: currentUser.uid, // Note: Changed 'user' to 'User' to match your schema
-    });
+    const habitDoc = doc(collection(store, "habits"), habitId);
+    const habitSnapshot = await getDoc(habitDoc);
+
+    if (!habitSnapshot.exists()) {
+      throw new Error(ERROR_MESSAGE.HABIT_NOT_FOUND);
+    }
+
+    if (habitSnapshot.data().user !== currentUser.uid) {
+      throw new Error(ERROR_MESSAGE.USER_NOT_AUTHORIZED);
+    }
+
+    await deleteDoc(habitDoc);
   } catch (error) {
-    console.error("Error adding habit:", error);
-    throw error; // Re-throw the error if you want to handle it in the calling component
+    console.error(ERROR_MESSAGE.WHILE_SUPPRESSING_HABIT, error);
+    throw error;
   }
-};
+}
+
+export async function updateHabit(
+  currentUser: UserInfo,
+  store: Firestore,
+  habit: Omit<Habits, "user">
+): Promise<void> {
+  if (!currentUser) {
+    throw new Error(ERROR_MESSAGE.USER_NOT_AUTHENTICATED);
+  }
+
+  try {
+    const habitDoc = doc(collection(store, "habits"), habit.id);
+    await updateDoc(habitDoc, habit);
+  } catch (error) {
+    console.error(ERROR_MESSAGE.WHILE_UPDATING_HABIT, error);
+    throw error;
+  }
+}

@@ -1,7 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
-export type HabitsType = {
-  id?: string;
+export type Habits = {
+  id: string;
   name: string;
   user: string;
   checked?: boolean;

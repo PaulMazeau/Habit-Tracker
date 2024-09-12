@@ -1,19 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, Button } from "react-native";
+import { StyleSheet, View, Text, TextInput } from "react-native";
+import Button from "../component/Reusable/Button";
 import { useNavigation } from "@react-navigation/native";
 import { FB_AUTH, FB_DB } from "../firebaseconfig";
 import { signOut } from "firebase/auth";
 import { useUser } from "../context/UserContext";
-import { getHabits } from "../services/habits";
-import { HabitsType } from "../types/habits";
+import {
+  addHabit,
+  deleteHabit,
+  getHabits,
+  updateHabit,
+} from "../services/habits";
+import { Habits } from "../types/habits";
 import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
 import CheckInput from "../component/Reusable/CheckInput";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { profile } = useUser(); // Utiliser le hook useUser pour accéder au profil
-  const [habits, setHabits] = useState<HabitsType[]>([]);
-  // const [checkedHabitsId , setCheckedHabitsId] = useState<string[]>([]);
+  const [habits, setHabits] = useState<Habits[]>([]);
 
   const handleSignOut = () => {
     signOut(FB_AUTH)
@@ -53,7 +58,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={{ fontFamily: "Geist" }}>HomePage 12345</Text>
       <Text>
         Bienvenue {profile.FirstName} {profile.LastName}
       </Text>
@@ -84,5 +88,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FCF8F5",
     flex: 1,
     alignItems: "center",
+  },
+  input: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
   },
 });
