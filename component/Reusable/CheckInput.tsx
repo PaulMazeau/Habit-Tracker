@@ -1,57 +1,21 @@
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-  ViewStyle,
-  View,
-} from "react-native";
+import React from "react";
+import { StyleSheet, TouchableOpacity, Text, View } from "react-native";
 import CheckLight from "../../assets/icons/Check-light.svg";
-import { useUser } from "../../context/UserContext";
-import { FB_DB } from "../../firebaseconfig";
-import {
-  getHabitsByDate,
-  updateHabit,
-  updateUserHabit,
-} from "../../services/habits";
-import { Timestamp } from "firebase/firestore";
-import { Habits } from "../../types/habits";
 
 interface CheckInputProps {
   id: string;
   content: string;
   isChecked: boolean;
-  habits: Habits[];
-  setHabits: React.Dispatch<React.SetStateAction<Habits[]>>;
+  onToggle: (id: string) => void;
 }
 
-function CheckInput({
-  id,
-  content,
-  isChecked,
-  habits,
-  setHabits,
-}: CheckInputProps) {
-  const { profile } = useUser();
+function CheckInput({ id, content, isChecked, onToggle }: CheckInputProps) {
+  console.log(isChecked);
+  console.log("CheckInput rendered");
 
   const handlePress = () => {
-    setHabits((prevHabits) =>
-      prevHabits.map((habit) =>
-        habit.id === id ? { ...habit, checked: !habit.checked } : habit
-      )
-    );
-
-    const newHabitsId = habits.map(
-      (habit) => habit.id === id && !habit.checked
-    );
-
-    console.log(newHabitsId);
-
-    updateUserHabit(profile, FB_DB, {
-      date: Timestamp.now(),
-      habits: [id],
-      user: profile.uid,
-    });
+    console.log("CheckInput handlePress");
+    onToggle(id);
   };
 
   return (
@@ -65,6 +29,8 @@ function CheckInput({
     </TouchableOpacity>
   );
 }
+
+export default React.memo(CheckInput);
 
 const styles = StyleSheet.create({
   container: {
@@ -85,7 +51,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   check: {
-    position: "relative",
     fontSize: 16,
     fontWeight: "500",
     aspectRatio: 1,
@@ -97,12 +62,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   checkLogo: {
-    aspectRatio: 1,
     width: "100%",
     height: 30,
-    position: "absolute",
-    top: 0,
   },
 });
-
-export default CheckInput;

@@ -27,9 +27,10 @@ import { FB_AUTH, FB_DB } from "../../firebaseconfig";
 
 interface Props {
   habits: Habits[];
+  userHabitId: string;
 }
 
-const App = ({ habits }: Props) => {
+const App = ({ habits, userHabitId }: Props) => {
   const { profile } = useUser();
   const [newHabits, setNewHabits] = useState<
     Pick<Habits, "user" | "name" | "id">[]
@@ -90,7 +91,7 @@ const App = ({ habits }: Props) => {
       (habit) => !habits.some((h) => h.name === habit.name)
     );
     filteredHabits.forEach((habit) => {
-      addHabit(FB_AUTH.currentUser, FB_DB, { name: habit.name });
+      addHabit(FB_AUTH.currentUser, FB_DB, { name: habit.name }, userHabitId);
     });
     setInputValue("");
   };
@@ -152,6 +153,7 @@ const App = ({ habits }: Props) => {
                   item={habit}
                   onDelete={() => handleDelete(habit.name, habit.id)}
                   enableEdit={habits.includes(habit)}
+                  userHabitId={userHabitId}
                 ></SwipeableItem>
               </View>
             ))}
