@@ -1,13 +1,16 @@
-import React from "react";
+import React, { useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Swipeable, TextInput } from "react-native-gesture-handler";
 import { useUser } from "../../context/UserContext";
 import { updateHabit } from "../../services/habits";
 import { FB_AUTH, FB_DB } from "../../firebaseconfig";
+import Button from "./Button";
 
 const SwipeableItem = ({ item, onDelete, enableEdit }) => {
   const [newName, setNewName] = React.useState(item.name);
   const [isEditing, setIsEditing] = React.useState(false);
+
+  const swipeableElement = useRef(null);
 
   const handleUpdateChange = (text: string) => {
     setNewName(text);
@@ -28,6 +31,7 @@ const SwipeableItem = ({ item, onDelete, enableEdit }) => {
 
   const handleToggleEdit = () => {
     setIsEditing(!isEditing);
+    swipeableElement.current.close();
   };
 
   const { profile } = useUser();
@@ -54,21 +58,18 @@ const SwipeableItem = ({ item, onDelete, enableEdit }) => {
   };
 
   return (
-    <Swipeable renderRightActions={renderRightActions}>
+    <Swipeable renderRightActions={renderRightActions} ref={swipeableElement}>
       <View style={styles.itemContainer}>
         {isEditing && (
           <View>
             <TextInput
-              style={styles.itemText}
+              style={styles.input}
               value={newName}
               onChangeText={(text) => handleUpdateChange(text)}
             />
-            <TouchableOpacity
-              onPress={handleUpdateHabit}
-              style={styles.updateButton}
-            >
-              <Text>Update</Text>
-            </TouchableOpacity>
+            <View style={styles.updateButtonContainer}>
+              <Button onPress={handleUpdateHabit} title="Modifier"></Button>
+            </View>
           </View>
         )}
         {!isEditing && <Text style={styles.itemText}>{item.name}</Text>}
@@ -78,14 +79,21 @@ const SwipeableItem = ({ item, onDelete, enableEdit }) => {
 };
 
 const styles = StyleSheet.create({
+  input: {
+    borderColor: "#BBB5B5",
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 10,
+  },
   itemContainer: {
-    backgroundColor: "#fff",
+    display: "flex",
+
     padding: 20,
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
+    backgroundColor: "#F3EFEE",
+    borderRadius: 5,
   },
   itemText: {
-    fontSize: 18,
+    fontSize: 16,
   },
   actionsContainer: {
     flexDirection: "row",
@@ -95,9 +103,10 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     backgroundColor: "#4CAF50",
+
     justifyContent: "center",
     alignItems: "center",
-    width: 80,
+    width: 60,
     height: "100%",
   },
   deleteButton: {
@@ -108,7 +117,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   updateButton: {
-    backgroundColor: "#f44336",
+    backgroundColor: "#172ACE",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  updateButtonContainer: {
+    marginTop: 10,
+  },
+  updateButtonText: {
+    color: "white",
+  },
+  contentContainer: {
+    display: "flex",
+    backgroundColor: "blue",
   },
 });
 

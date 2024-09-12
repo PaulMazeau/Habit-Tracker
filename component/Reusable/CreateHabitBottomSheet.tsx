@@ -17,10 +17,10 @@ import {
   BottomSheetModal,
   BottomSheetView,
   BottomSheetBackdrop,
-} from '@gorhom/bottom-sheet';
-import { useUser } from '../../context/UserContext';
-import { Habits } from '../../types/habits';
-import AddButton from '../../assets/icons/AddButton.svg';
+} from "@gorhom/bottom-sheet";
+import { useUser } from "../../context/UserContext";
+import { Habits } from "../../types/habits";
+import AddButton from "../../assets/icons/AddButton.svg";
 
 import SwipeableItem from "./SwipeableItem";
 import { deleteHabit, addHabit, updateHabit } from "../../services/habits";
@@ -44,7 +44,7 @@ const CreateHabitBottomSheet = ({ habits }: Props) => {
 
   // callbacks
   const handlePresentModalPress = () => bottomSheetModalRef.current?.present();
-  
+
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
   }, []);
@@ -105,62 +105,66 @@ const CreateHabitBottomSheet = ({ habits }: Props) => {
 
   // renders
   return (
+    <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={handlePresentModalPress}
+      >
+        <AddButton />
+      </TouchableOpacity>
 
-      <View style={styles.container}>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handlePresentModalPress}
-        >
-          <AddButton/>
-        </TouchableOpacity>
-
-        <BottomSheetModal
-          ref={bottomSheetModalRef}
-          index={1}
-          style={{ zIndex: 1000 }} 
-          snapPoints={snapPoints}
-          onChange={handleSheetChanges}
-          backdropComponent={(props) => (
-            <BottomSheetBackdrop
-              {...props}
-              disappearsOnIndex={-1}
-              appearsOnIndex={0}
-              opacity={0.5}
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={1}
+        style={{ zIndex: 1000 }}
+        snapPoints={snapPoints}
+        handleComponent={null}
+        onChange={handleSheetChanges}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            opacity={0.5}
+          />
+        )}
+      >
+        <BottomSheetView style={styles.contentContainer}>
+          <Text style={styles.title}>Ajouter une habitude</Text>
+          <View>
+            <Text style={styles.subTitle}>Nom de l'habitude</Text>
+            <Text style={styles.paraText}>
+              Sépare les habitudes par des virgules
+            </Text>
+            <TextInput
+              placeholderTextColor={"grey"}
+              style={styles.input}
+              placeholder="méditer, pouette, boire de l'eau"
+              onChangeText={handleInputChange}
+              value={inputValue}
             />
-          )}
-        >
-          <BottomSheetView style={styles.contentContainer}>
-            <Text style={styles.title}>Ajouter une habitude</Text>
-            <View>
-              <Text style={styles.subTitle}>Nom de l'habitude</Text>
-              <Text style={styles.paraText}>
-                Sépare les habitudes par des virgules
-              </Text>
-              <TextInput
-                placeholderTextColor={"grey"}
-                style={styles.input}
-                placeholder="méditer,faire un popo,boire de l'eau"
-                onChangeText={handleInputChange}
-                value={inputValue}
-              />
+          </View>
+          <Text style={styles.subTitle}>Habitudes à ajouter :</Text>
+          {newHabits.map((habit, index) => (
+            <View key={index}>
+              <SwipeableItem
+                item={habit}
+                onDelete={() => handleDelete(habit.name, habit.id)}
+                enableEdit={habits.includes(habit)}
+              ></SwipeableItem>
             </View>
-            <Text style={styles.subTitle}>Habitudes à ajouter :</Text>
-            {newHabits.map((habit, index) => (
-              <View key={index}>
-                <SwipeableItem
-                  item={habit}
-                  onDelete={() => handleDelete(habit.name, habit.id)}
-                  enableEdit={habits.includes(habit)}
-                ></SwipeableItem>
-              </View>
-            ))}
-            <View style={{ flex: 1 }}></View>
-            <View style={styles.buttonContainer}>
-              <Button title="Ajouter l'habitude" onPress={closeBottomSheet} color="white"/>
-            </View>
-          </BottomSheetView>
-        </BottomSheetModal>
-      </View>
+          ))}
+          <View style={{ flex: 1 }}></View>
+          <View style={styles.buttonContainer}>
+            <Button
+              title="+ Ajouter l'habitude"
+              onPress={closeBottomSheet}
+              color="white"
+            />
+          </View>
+        </BottomSheetView>
+      </BottomSheetModal>
+    </View>
   );
 };
 
@@ -172,6 +176,7 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 10,
     backgroundColor: "#FCF8F5",
+    borderRadius: 20,
     height: "100%",
     display: "flex",
     flexDirection: "column",
@@ -179,7 +184,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   addButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 100,
     right: 20,
   },
@@ -216,8 +221,9 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     justifyContent: "center",
     alignContent: "center",
-    marginBottom: 20,
+    marginBottom: 50,
     height: 48,
+    fontWeight: "600",
   },
   habit: {
     backgroundColor: "#F3EFEE",
