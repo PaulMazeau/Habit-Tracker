@@ -7,11 +7,11 @@ import {
   BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet';
 import { useUser } from '../../context/UserContext';
-import { HabitsType } from '../../types/habits';
+import { Habits } from '../../types/habits';
 
 const App = () => {
   const { profile } = useUser();
-  const [habits, setHabits] = useState<HabitsType[]>([]);
+  const [habits, setHabits] = useState<Pick<Habits, "user" | "name">[]>([]);
   // ref
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -26,10 +26,14 @@ const App = () => {
     console.log('handleSheetChanges', index);
   }, []);
 
-  const handleInputChange = (text) => {
+  const handleInputChange = (text: string) => {
     const habits = text
       .split(",")
-      .map((habit) => ({ name: habit.trim(), user: profile.firstName }));
+      .map((habit) => ({ name: habit.trim(), user: profile.uid })) as Pick<
+      Habits,
+      "user" | "name"
+    >[];
+
     setHabits(habits);
   };
 

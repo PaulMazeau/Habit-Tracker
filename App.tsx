@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
+import {
+  View,
+  ActivityIndicator,
+  Text,
+  StyleSheet,
+  AppRegistry,
+} from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -71,3 +77,5 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
+
+AppRegistry.registerComponent("main", () => App);

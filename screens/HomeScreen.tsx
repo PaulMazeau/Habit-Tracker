@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, Button } from "react-native";
+import { StyleSheet, View, Text, TextInput } from "react-native";
+import Button from "../component/Reusable/Button";
 import { useNavigation } from "@react-navigation/native";
 import { FB_AUTH, FB_DB } from "../firebaseconfig";
 import { signOut } from "firebase/auth";
 import { useUser } from "../context/UserContext";
-import { getHabits } from "../services/habits";
-import { HabitsType } from "../types/habits";
+import {
+  addHabit,
+  deleteHabit,
+  getHabits,
+  updateHabit,
+} from "../services/habits";
+import { Habits } from "../types/habits";
 import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
 import CheckInput from "../component/Reusable/CheckInput";
 import Svg, { Circle, G } from "react-native-svg";
