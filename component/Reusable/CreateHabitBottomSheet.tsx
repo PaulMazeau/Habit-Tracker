@@ -1,79 +1,103 @@
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import CustomBackdrop from "../../component/Reusable/CustomBackdrop";
-import CustomHandle from "../../component/Reusable/CustomHandle";
-import { ChangeEvent, useCallback, useMemo, useRef, useState } from "react";
-import { Text, View, StyleSheet, TextInput } from "react-native";
-import { HabitsType } from "../../types/habits";
-import Button from "./Button";
-import { useUser } from "../../context/UserContext";
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Button, TextInput, TouchableOpacity } from 'react-native';
+import {
+  BottomSheetModal,
+  BottomSheetView,
+  BottomSheetModalProvider,
+  BottomSheetBackdrop,
+} from '@gorhom/bottom-sheet';
+import { useUser } from '../../context/UserContext';
+import { HabitsType } from '../../types/habits';
 
-export default function CreateHabitBottomSheet() {
+const App = () => {
   const { profile } = useUser();
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["20%", "70%"], []);
   const [habits, setHabits] = useState<HabitsType[]>([]);
+  // ref
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-  const handleInputChange = (text: string) => {
-    console.log(text);
+  // variables
+  const snapPoints = useMemo(() => ['25%', '80%'], []);
 
+  // callbacks
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
+  const handleSheetChanges = useCallback((index: number) => {
+    console.log('handleSheetChanges', index);
+  }, []);
+
+  const handleInputChange = (text) => {
     const habits = text
       .split(",")
-      .map((habit) => ({ name: habit, user: profile.firstName }));
+      .map((habit) => ({ name: habit.trim(), user: profile.firstName }));
     setHabits(habits);
   };
 
-  const handleBackdropPress = useCallback((behavior) => {
-    if (behavior === "close") {
-      bottomSheetRef.current?.close();
-    } else if (behavior === "collapse") {
-      bottomSheetRef.current?.collapse();
-    }
-  }, []);
+  const closeBottomSheet = () => {
+    bottomSheetModalRef.current?.close();
+  };
 
+  // renders
   return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={0}
-      snapPoints={snapPoints}
-      backdropComponent={(props) => (
-        <CustomBackdrop
-          {...props}
-          pressBehavior="collapse"
-          onPress={handleBackdropPress}
-        />
-      )}
-      handleComponent={CustomHandle}
-    >
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>Ajouter une habitude</Text>
-        <View>
-          <Text style={styles.subTitle}>Nom de l'habitude</Text>
-          <Text style={styles.paraText}>
-            Sépare les habitudes par des virgules
-          </Text>
-          <TextInput
-            placeholderTextColor={"grey"}
-            style={styles.input}
-            placeholder="méditer,faire un popo,boire de l'eau"
-            onChangeText={(text) => handleInputChange(text)}
-          ></TextInput>
-        </View>
-        <Text style={styles.subTitle}>Habitude à ajoutées :</Text>
-        {habits.map((habit) => (
-          <Text style={styles.habit} key={habit.id}>
-            {habit.name}
-          </Text>
-        ))}
-        <View style={{ flex: 1 }}></View>
-        <View style={styles.buttonContainer}>
-          <Button title="+ Ajouter l'habitude"></Button>
-        </View>
+    <BottomSheetModalProvider>
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handlePresentModalPress}
+        >
+          <Text style={styles.addButtonText}>+ Ajouter une habitude</Text>
+        </TouchableOpacity>
+
+        <BottomSheetModal
+          ref={bottomSheetModalRef}
+          index={1}
+          snapPoints={snapPoints}
+          onChange={handleSheetChanges}
+          backdropComponent={(props) => (
+            <BottomSheetBackdrop
+              {...props}
+              disappearsOnIndex={-1}
+              appearsOnIndex={0}
+              opacity={0.5}  
+            />
+          )}
+        >
+          <BottomSheetView style={styles.contentContainer}>
+            <Text style={styles.title}>Ajouter une habitude</Text>
+            <View>
+              <Text style={styles.subTitle}>Nom de l'habitude</Text>
+              <Text style={styles.paraText}>
+                Sépare les habitudes par des virgules
+              </Text>
+              <TextInput
+                placeholderTextColor={"grey"}
+                style={styles.input}
+                placeholder="méditer,faire un popo,boire de l'eau"
+                onChangeText={handleInputChange}
+              />
+            </View>
+            <Text style={styles.subTitle}>Habitudes à ajouter :</Text>
+            {habits.map((habit, index) => (
+              <Text style={styles.habit} key={index}>
+                {habit.name}
+              </Text>
+            ))}
+            <View style={{ flex: 1 }}></View>
+            <View style={styles.buttonContainer}>
+              {/* Ferme la BottomSheet quand on clique sur "Ajouter l'habitude" */}
+              <Button title="+ Ajouter l'habitude" onPress={closeBottomSheet} />
+            </View>
+          </BottomSheetView>
+        </BottomSheetModal>
       </View>
-    </BottomSheet>
+    </BottomSheetModalProvider>
   );
-}
+};
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1
+  },
   contentContainer: {
     paddingVertical: 30,
     paddingHorizontal: 10,
@@ -82,13 +106,28 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
     gap: 20,
+    flex: 1,
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    backgroundColor: '#172ACE',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  addButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 24,
   },
-  label: {
+  subTitle: {
     fontSize: 16,
     fontWeight: "500",
   },
@@ -97,10 +136,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 14,
     padding: 10,
-  },
-  subTitle: {
-    fontSize: 16,
-    fontWeight: "500",
   },
   paraText: {
     fontSize: 12,
@@ -111,12 +146,19 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: "90%",
     marginHorizontal: "auto",
+    backgroundColor: "#0049AC",
+    borderRadius: 13,
+    justifyContent: "center",
+    alignContent: 'center', 
+    marginBottom: 20,
   },
   habit: {
     backgroundColor: "#F3EFEE",
-
     padding: 10,
     textAlign: "center",
     borderRadius: 5,
   },
+  
 });
+
+export default App;

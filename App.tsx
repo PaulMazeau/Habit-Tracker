@@ -8,6 +8,7 @@ import AuthStack from "./component/Navigation/AuthStack";
 import { UserProvider } from "./context/UserContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Font from "expo-font";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 const Stack = createNativeStackNavigator();
 
@@ -60,9 +61,11 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <UserProvider>
-          <NavigationContainer>
-            <AppNavigator />
-          </NavigationContainer>
+          <BottomSheetModalProvider>
+            <NavigationContainer>
+              <AppNavigator/>
+            </NavigationContainer>
+          </BottomSheetModalProvider>
         </UserProvider>
       </AuthProvider>
     </GestureHandlerRootView>

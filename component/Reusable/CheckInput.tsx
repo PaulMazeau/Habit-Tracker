@@ -31,9 +31,10 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor : '#F3EFEE',
         gap : 10,
-        width : '80%',
+        width : '95%',
         justifyContent : 'flex-start',
         marginBottom : 10,
+        marginHorizontal: '2.5%'
     },
     text: {
         fontSize: 16,

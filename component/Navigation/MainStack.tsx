@@ -22,6 +22,7 @@ export default function MainStack() {
         tabBarStyle: {
           backgroundColor: "#171717",
           position: "absolute",
+          zIndex: 1,
           bottom: Platform.OS === "android" && keyboardStatus ? 0 : 30,
           left: 100,
           right: 100,
