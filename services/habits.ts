@@ -20,8 +20,15 @@ const ERROR_MESSAGE = {
   USER_NOT_AUTHORIZED: "You are not authorized to delete this habit",
   WHILE_SUPPRESSING_HABIT: "An error occurred while deleting the habit",
   WHILE_FETCHING_HABITS: "An error occurred while fetching habits",
+  WHILE_FETCHING_HABITS_BY_DATE:
+    "An error occurred while fetching habits by date",
   WHILE_ADDING_HABIT: "An error occurred while adding the habit",
   WHILE_UPDATING_HABIT: "An error occurred while updating the habit",
+};
+
+const FB_COLLECTION = {
+  HABITS: "habits",
+  USER_HABITS: "user_habits",
 };
 
 export function getHabits(
@@ -35,7 +42,7 @@ export function getHabits(
   }
 
   const q = query(
-    collection(store, "habits"),
+    collection(store, FB_COLLECTION.HABITS),
     where("user", "==", currentUser.uid)
   );
 
@@ -60,6 +67,54 @@ export function getHabits(
   return unsubscribe;
 }
 
+export function getHabitsByDate(
+  currentUser: Pick<UserInfo, "uid">,
+  store: Firestore,
+  callback: (habitsByDate: HabitsByDate | null) => void
+): Unsubscribe {
+  if (!currentUser) {
+    callback(null);
+    return () => {};
+  }
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const q = query(
+    collection(store, FB_COLLECTION.USER_HABITS),
+    where("user", "==", currentUser.uid),
+    where("date", ">=", startOfDay),
+    where("date", "<=", endOfDay)
+  );
+
+  const unsubscribe = onSnapshot(
+    q,
+    (querySnapshot) => {
+      console.log({ QUERY_SNAPSHOT: querySnapshot.empty });
+      if (querySnapshot.empty) {
+        callback(null);
+      } else {
+        const doc = querySnapshot.docs[0];
+        const habitsCheckedToday: HabitsByDate = {
+          id: doc.id,
+          date: doc.data().date,
+          user: doc.data().user,
+          habits: doc.data().habits,
+        };
+        callback(habitsCheckedToday);
+      }
+    },
+    (error) => {
+      console.error(ERROR_MESSAGE.WHILE_FETCHING_HABITS, error);
+      callback(null);
+    }
+  );
+
+  return unsubscribe;
+}
+
 export async function addHabit(
   currentUser: UserInfo,
   store: Firestore,
@@ -70,7 +125,7 @@ export async function addHabit(
   }
 
   try {
-    await addDoc(collection(store, "habits"), {
+    await addDoc(collection(store, FB_COLLECTION.HABITS), {
       ...habit,
       user: currentUser.uid, // Note: Changed 'user' to 'User' to match your schema
     });
@@ -104,7 +159,7 @@ export const getAllHabitsCalendar = (
 
   const userHabitsUnsubscribe = onSnapshot(
     query(
-      collection(store, "user_habits"),
+      collection(store, FB_COLLECTION.USER_HABITS),
       where("user", "==", currentUser.uid)
     ),
     (querySnapshot) => {
@@ -153,7 +208,7 @@ export async function deleteHabit(
   }
 
   try {
-    const habitDoc = doc(collection(store, "habits"), habitId);
+    const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habitId);
     const habitSnapshot = await getDoc(habitDoc);
 
     if (!habitSnapshot.exists()) {
@@ -181,10 +236,39 @@ export async function updateHabit(
   }
 
   try {
-    const habitDoc = doc(collection(store, "habits"), habit.id);
-    await updateDoc(habitDoc, { name: habit.name, user: currentUser.uid });
+    const habitDoc = doc(collection(store, FB_COLLECTION.HABITS), habit.id);
+    await updateDoc(habitDoc, habit);
   } catch (error) {
     console.error(ERROR_MESSAGE.WHILE_UPDATING_HABIT, error);
     throw error;
   }
+}
+
+type UserHabit = {
+  date: string;
+  habits: Habits["id"][];
+  user: UserInfo["uid"];
+};
+
+export async function updateUserHabit(
+  currentUser: UserInfo,
+  store: Firestore,
+  userHabit: UserHabit
+): Promise<void> {
+  if (!currentUser) {
+    throw new Error(ERROR_MESSAGE.USER_NOT_AUTHENTICATED);
+  }
+
+  getHabitsByDate(currentUser, store, async (habitsByDate) => {
+    if (habitsByDate) {
+      return;
+    }
+    
+    // try {
+    //   await addDoc(collection(store, FB_COLLECTION.USER_HABITS), userHabit);
+    // } catch (error) {
+    //   console.error(ERROR_MESSAGE.WHILE_ADDING_HABIT, error);
+    //   throw error;
+    // }
+  });
 }

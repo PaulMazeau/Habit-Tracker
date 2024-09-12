@@ -9,6 +9,7 @@ import {
   addHabit,
   deleteHabit,
   getHabits,
+  getHabitsByDate,
   updateHabit,
 } from "../services/habits";
 import { Habits } from "../types/habits";
@@ -30,6 +31,21 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const { profile } = useUser(); // Utiliser le hook useUser pour accéder au profil
   const [habits, setHabits] = useState<Habits[]>([]);
+
+  const handleSignOut = () => {
+    signOut(FB_AUTH)
+      .then(() => {
+        navigation.reset({
+          index: 0,
+          //@ts-ignore
+          routes: [{ name: "Auth" }],
+        });
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la déconnexion:", error);
+      });
+  };
+
   const [progress, setProgress] = useState(0); // la progression en pourcentage (0 à 1)
   const progressAnimated = useSharedValue(0);
   // const [checkedHabitsId , setCheckedHabitsId] = useState<string[]>([]);
@@ -45,15 +61,37 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    let unsubscribe = () => {};
+    let unsubscribeToGetHabits = () => {};
+    let unsubscribeToGetHabitsByDate = () => {};
 
     if (profile?.uid) {
-      unsubscribe = getHabits(profile, FB_DB, (fetchedHabits) => {
-        setHabits(fetchedHabits);
+      unsubscribeToGetHabits = getHabits(profile, FB_DB, (allHabits) => {
+        setHabits(allHabits);
       });
+
+      unsubscribeToGetHabitsByDate = getHabitsByDate(
+        profile,
+        FB_DB,
+        (todayHabits) => {
+          setHabits((prev) => {
+            const todayHabitsId = todayHabits?.habits as Habits["id"][];
+            const allHabits = prev;
+            const allHabitsWithChecked = allHabits.map((habit) => {
+              const isCheckedToday = todayHabitsId?.includes(habit.id);
+              habit.checked = isCheckedToday;
+              return habit;
+            });
+
+            return allHabitsWithChecked;
+          });
+        }
+      );
     }
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeToGetHabitsByDate();
+      unsubscribeToGetHabits();
+    };
   }, [profile]);
 
   useEffect(() => {
@@ -128,12 +166,9 @@ export default function HomeScreen() {
           key={habit.id}
           id={habit.id}
           content={habit.name}
-          checked={habit.checked}
-          onChange={() => handleCheckHabit(habit.id)}
+          isChecked={habit.checked}
         />
-        // <Text key={habit.id}>{habit.name}</Text>
       ))}
-
       <CreateHabitBottomSheet habits={habits} />
     </View>
   );
