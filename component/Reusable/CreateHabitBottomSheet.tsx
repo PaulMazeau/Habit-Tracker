@@ -60,10 +60,6 @@ const App = ({ habits }: Props) => {
     setNewHabits([...habits, ...newHabits]);
   };
 
-  const handleUpdateInputChange = (text: string) => {
-    setEditingHabitText(text);
-  };
-
   const handleDelete = (name: string, id?: string) => {
     console.log("delete", id, name);
 
@@ -86,16 +82,6 @@ const App = ({ habits }: Props) => {
       // delete habit from database
       deleteHabit(FB_AUTH.currentUser, FB_DB, id);
     }
-  };
-
-  const handleUpdate = (text: string, id: string) => {
-    console.log("update", id, text);
-    updateHabit(FB_AUTH.currentUser, FB_DB, { name: text, id });
-    setIsEditingHabit(false);
-  };
-
-  const handleEditClick = () => {
-    setIsEditingHabit(true);
   };
 
   const handleAddHabits = () => {
