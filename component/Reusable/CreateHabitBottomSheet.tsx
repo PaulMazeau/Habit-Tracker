@@ -142,7 +142,7 @@ const CreateHabitBottomSheet = ({ habits, userHabitId }: Props) => {
             <TextInput
               placeholderTextColor={"grey"}
               style={styles.input}
-              placeholder="méditer, pouette, boire de l'eau"
+              placeholder="Méditer, Faire du sport, Boire de l'eau"
               onChangeText={handleInputChange}
               value={inputValue}
             />
