@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export type HabitsType = {
   id: string;
   name: string;
@@ -5,7 +7,8 @@ export type HabitsType = {
 };
 
 export type HabitsByDate = {
-  date: Date;
-  totalHabits: number;
-  habits: number;
+  id: string;
+  date: Timestamp;
+  user: string;
+  habits: string[];
 };

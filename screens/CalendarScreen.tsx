@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -11,6 +11,9 @@ import Svg, { Circle, G } from "react-native-svg";
 import Animated, { useAnimatedProps } from "react-native-reanimated";
 import Header from "../component/Reusable/Header";
 import { useFocusEffect } from "@react-navigation/native";
+import { useUser } from "../context/UserContext";
+import { FB_DB } from "../firebaseconfig";
+import { getAllHabitsCalendar } from "../services/habits";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -43,7 +46,20 @@ const monthNames = [
 ];
 
 const MonthCalendar = React.forwardRef(
-  ({ month, year }: { month: number; year: number }, ref) => {
+  (
+    {
+      month,
+      year,
+      habitsCalendar,
+    }: {
+      month: number;
+      year: number;
+      habitsCalendar: {
+        [key: string]: { totalHabits: number; habits: number };
+      };
+    },
+    ref
+  ) => {
     const daysInMonth = getDaysInMonth(month, year);
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
@@ -53,7 +69,7 @@ const MonthCalendar = React.forwardRef(
 
     const calculateProgress = (day: number) => {
       const date = `${year}/${month + 1}/${day}`;
-      const habits = habitsByDates[date];
+      const habits = habitsCalendar[date];
       if (!habits) {
         return 0;
       }
@@ -111,6 +127,10 @@ const MonthCalendar = React.forwardRef(
 export default function YearCalendarScreen() {
   const scrollViewRef = useRef(null);
   const monthRefs = useRef([]);
+  const { profile } = useUser(); // Utiliser le hook useUser pour accéder au profil
+  const [habitsCalendar, setHabitsCalendar] = useState<{
+    [key: string]: { totalHabits: number; habits: number };
+  }>({});
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
@@ -138,6 +158,18 @@ export default function YearCalendarScreen() {
     }, [])
   );
 
+  useEffect(() => {
+    let unsubscribe = () => {};
+
+    if (profile?.uid) {
+      unsubscribe = getAllHabitsCalendar(profile, FB_DB, (fetchedHabits) => {
+        setHabitsCalendar(fetchedHabits);
+      });
+    }
+
+    return () => unsubscribe();
+  }, [profile]);
+
   return (
     <ScrollView
       ref={scrollViewRef}
@@ -152,6 +184,7 @@ export default function YearCalendarScreen() {
             month={index}
             year={currentYear}
             ref={(el) => (monthRefs.current[index] = el)}
+            habitsCalendar={habitsCalendar}
           />
         ))}
       </View>
