@@ -7,11 +7,13 @@ import { useUser } from "../context/UserContext";
 import { getHabits } from "../services/habits";
 import { HabitsType } from "../types/habits";
 import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
+import CheckInput from "../component/Reusable/CheckInput";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { profile } = useUser(); // Utiliser le hook useUser pour accéder au profil
   const [habits, setHabits] = useState<HabitsType[]>([]);
+  // const [checkedHabitsId , setCheckedHabitsId] = useState<string[]>([]);
 
   const handleSignOut = () => {
     signOut(FB_AUTH)
@@ -25,6 +27,17 @@ export default function HomeScreen() {
         console.error("Erreur lors de la déconnexion:", error);
       });
   };
+
+  const handleCheckHabit = (id: string) => {
+    console.log("id", id);
+    
+    setHabits((prevHabits) =>
+      prevHabits.map((habit) =>
+        habit.id === id ? { ...habit, checked: !habit.checked } : habit
+      )
+    );
+
+  }
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -45,7 +58,14 @@ export default function HomeScreen() {
         Bienvenue {profile.FirstName} {profile.LastName}
       </Text>
       {habits.map((habit) => (
-        <Text key={habit.id}>{habit.name}</Text>
+        <CheckInput
+          key={habit.id}
+          id={habit.id}
+          content={habit.name}
+          checked={habit.checked}
+          onChange={() => handleCheckHabit(habit.id)}
+        />
+        // <Text key={habit.id}>{habit.name}</Text>
       ))}
       <Button title="Déconnexion" onPress={handleSignOut} />
       <CreateHabitBottomSheet />
