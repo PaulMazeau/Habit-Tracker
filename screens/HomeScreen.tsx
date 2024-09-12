@@ -9,6 +9,7 @@ import {
   addHabit,
   deleteHabit,
   getHabits,
+  getHabitsByDate,
   updateHabit,
 } from "../services/habits";
 import { Habits } from "../types/habits";
@@ -25,6 +26,7 @@ export default function HomeScreen() {
       .then(() => {
         navigation.reset({
           index: 0,
+          //@ts-ignore
           routes: [{ name: "Auth" }],
         });
       })
@@ -33,27 +35,38 @@ export default function HomeScreen() {
       });
   };
 
-  const handleCheckHabit = (id: string) => {
-    console.log("id", id);
-    
-    setHabits((prevHabits) =>
-      prevHabits.map((habit) =>
-        habit.id === id ? { ...habit, checked: !habit.checked } : habit
-      )
-    );
-
-  }
-
   useEffect(() => {
-    let unsubscribe = () => {};
+    let unsubscribeToGetHabits = () => {};
+    let unsubscribeToGetHabitsByDate = () => {};
 
     if (profile?.uid) {
-      unsubscribe = getHabits(profile, FB_DB, (fetchedHabits) => {
-        setHabits(fetchedHabits);
+      unsubscribeToGetHabits = getHabits(profile, FB_DB, (allHabits) => {
+        setHabits(allHabits);
       });
+
+      unsubscribeToGetHabitsByDate = getHabitsByDate(
+        profile,
+        FB_DB,
+        (todayHabits) => {
+          setHabits((prev) => {
+            const todayHabitsId = todayHabits?.habits as Habits["id"][];
+            const allHabits = prev;
+            const allHabitsWithChecked = allHabits.map((habit) => {
+              const isCheckedToday = todayHabitsId?.includes(habit.id);
+              habit.checked = isCheckedToday;
+              return habit;
+            });
+
+            return allHabitsWithChecked;
+          });
+        }
+      );
     }
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeToGetHabitsByDate();
+      unsubscribeToGetHabits();
+    };
   }, [profile]);
 
   return (
@@ -66,13 +79,11 @@ export default function HomeScreen() {
           key={habit.id}
           id={habit.id}
           content={habit.name}
-          checked={habit.checked}
-          onChange={() => handleCheckHabit(habit.id)}
+          isChecked={habit.checked}
         />
-        // <Text key={habit.id}>{habit.name}</Text>
       ))}
       <Button title="Déconnexion" onPress={handleSignOut} />
-      <CreateHabitBottomSheet />
+      {/* <CreateHabitBottomSheet /> */}
     </View>
   );
 }

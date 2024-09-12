@@ -1,7 +1,7 @@
 import BottomSheet from "@gorhom/bottom-sheet";
 import CustomBackdrop from "../../component/Reusable/CustomBackdrop";
 import CustomHandle from "../../component/Reusable/CustomHandle";
-import { ChangeEvent, useCallback, useMemo, useRef, useState } from "react";
+import {  useCallback, useMemo, useRef, useState } from "react";
 import { Text, View, StyleSheet, TextInput } from "react-native";
 import { Habits } from "../../types/habits";
 import Button from "./Button";
@@ -11,14 +11,16 @@ export default function CreateHabitBottomSheet() {
   const { profile } = useUser();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["20%", "70%"], []);
-  const [habits, setHabits] = useState<Pick<Habits, "user" | "name">[]>([]);
+  const [habits, setHabits] = useState<Pick<Habits, "user" | "name" | "id">[]>(
+    []
+  );
 
   const handleInputChange = (text: string) => {
     const habits = text
       .split(",")
       .map((habit) => ({ name: habit, user: profile.uid })) as Pick<
       Habits,
-      "user" | "name"
+      "user" | "name" | "id"
     >[];
 
     setHabits(habits);
@@ -62,6 +64,7 @@ export default function CreateHabitBottomSheet() {
         </View>
         <Text style={styles.subTitle}>Habitude à ajoutées :</Text>
         {habits.map((habit) => (
+          // TODO: USE THE RIGHT ID
           <Text style={styles.habit} key={habit.id}>
             {habit.name}
           </Text>
