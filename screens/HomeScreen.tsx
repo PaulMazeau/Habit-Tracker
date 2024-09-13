@@ -174,11 +174,11 @@ const styles = StyleSheet.create({
     fontFamily: "GeistMono",
     position: "absolute",
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "800",
     color: "black",
     left: "50%",
     top: "50%",
-    transform: [{ translateX: -15 }, { translateY: -15 }],
+    transform: [{ translateX: -16 }, { translateY: -15 }],
   },
   subtitle: {
     marginLeft: "2.5%",

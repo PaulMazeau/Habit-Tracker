@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+    overflow: "hidden",
     borderRadius: 12,
   },
   countdownText: {
@@ -59,6 +60,7 @@ const styles = StyleSheet.create({
     color: "#4D4D4D",
     backgroundColor: "#D9D9D9",
     borderRadius: 12,
+    overflow: "hidden",
   },
 });
 
