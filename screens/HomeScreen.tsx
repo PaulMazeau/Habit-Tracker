@@ -109,7 +109,6 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.head}>
         <HeaderHome title="Aujourd'hui" />
-        
       </View>
       <View style={styles.circle}>
         <Svg height="260" width="260" viewBox="0 0 120 120">
@@ -135,6 +134,9 @@ export default function HomeScreen() {
             />
           </G>
         </Svg>
+        <Text style={styles.completion}>
+          {habits.filter((habit) => habit.isChecked).length}/{habits.length}
+        </Text>
       </View>
 
       <Text style={styles.subtitle}>Mes habitudes</Text>
@@ -166,6 +168,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 40,
+    position: "relative",
+  },
+  completion: {
+    fontFamily: "GeistMono",
+    position: "absolute",
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "black",
+    left: "50%",
+    top: "50%",
+    transform: [{ translateX: -15 }, { translateY: -15 }],
   },
   subtitle: {
     marginLeft: "2.5%",

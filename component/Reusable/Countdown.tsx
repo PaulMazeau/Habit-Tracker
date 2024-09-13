@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#4D4D4D",
     backgroundColor: "#D9D9D9",
+    borderRadius: 12,
   },
 });
 
