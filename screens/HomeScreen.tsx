@@ -21,6 +21,7 @@ import Animated, {
   useSharedValue,
   useAnimatedProps,
 } from "react-native-reanimated";
+import Countdown from "../component/Reusable/Countdown";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -101,10 +102,15 @@ export default function HomeScreen() {
       user: profile.uid,
     });
   };
+  const today = new Date();
+  today.setHours(23, 59, 0, 0);
 
   return (
     <View style={styles.container}>
-      <Header title="Aujourd'hui" />
+      <View style={styles.head}>
+        <Header title="Aujourd'hui" />
+        <Countdown endTime={today} />
+      </View>
       <View style={styles.circle}>
         <Svg height="260" width="260" viewBox="0 0 120 120">
           <G transform={`rotate(-90, 60, 60)`}>
@@ -150,6 +156,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FCF8F5",
+  },
+  head: {
+    display: "flex",
+    flexDirection: "row",
+    width: "100%",
   },
   circle: {
     justifyContent: "center",
