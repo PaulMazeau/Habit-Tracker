@@ -6,31 +6,7 @@ interface CountdownProps {
 
 import { StyleSheet, View, Text } from "react-native";
 
-const styles = StyleSheet.create({
-  countdownContainer: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  countdownText: {
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-    fontFamily: "sans-serif",
-    fontWeight: "bold",
-    color: "#4D4D4D",
-    backgroundColor: "#D9D9D9",
-  },
-});
-
-const CountdownContainer = ({ children }) => (
-  <View style={styles.countdownContainer}>{children}</View>
-);
+// Removed unused CountdownContainer component
 
 const CountdownText = ({ children }) => (
   <Text style={styles.countdownText}>{children}</Text>
@@ -63,5 +39,26 @@ const Countdown: React.FC<CountdownProps> = ({ endTime }) => {
 
   return <CountdownText>{timeLeft}</CountdownText>;
 };
+
+const styles = StyleSheet.create({
+  countdownContainer: {
+    backgroundColor: "#f0f0f0",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+  },
+  countdownText: {
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    alignSelf: "flex-start",
+    fontFamily: "sans-serif",
+    fontWeight: "bold",
+    color: "#4D4D4D",
+    backgroundColor: "#D9D9D9",
+  },
+});
 
 export default Countdown;

@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { useUser } from "../context/UserContext";
 import CheckInput from "../component/Reusable/CheckInput";
-import Header from "../component/Reusable/Header";
+import HeaderHome from "../component/Reusable/HeaderHome";
 import CreateHabitBottomSheet from "../component/Reusable/CreateHabitBottomSheet";
 import Svg, { Circle, G } from "react-native-svg";
 import Animated, {
@@ -108,8 +108,8 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.head}>
-        <Header title="Aujourd'hui" />
-        <Countdown endTime={today} />
+        <HeaderHome title="Aujourd'hui" />
+        
       </View>
       <View style={styles.circle}>
         <Svg height="260" width="260" viewBox="0 0 120 120">

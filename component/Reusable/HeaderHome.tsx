@@ -7,12 +7,16 @@ type HeaderProps = {
   title: string;
 };
 
-const Header: React.FC<HeaderProps> = ({ title }) => {
+const HeaderHome: React.FC<HeaderProps> = ({ title }) => {
+
+  const today = new Date();
+  today.setHours(23, 59, 0, 0);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
+        <Countdown endTime={today} />
       </View>
     </SafeAreaView>
   );
@@ -37,4 +41,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Header;
+export default HeaderHome;
