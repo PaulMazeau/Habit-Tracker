@@ -92,7 +92,6 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     display: "flex",
-
     padding: 20,
     backgroundColor: "#F3EFEE",
     borderRadius: 5,
@@ -108,7 +107,6 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     backgroundColor: "#4CAF50",
-
     justifyContent: "center",
     alignItems: "center",
     width: 60,
@@ -116,6 +114,8 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: "#f44336",
+    borderTopRightRadius: 5,
+    borderBottomRightRadius: 5,
   },
   actionText: {
     color: "#fff",

@@ -25,6 +25,7 @@ import AddButton from "../../assets/icons/AddButton.svg";
 import SwipeableItem from "./SwipeableItem";
 import { deleteHabit, addHabit, updateHabit } from "../../services/habits";
 import { FB_AUTH, FB_DB } from "../../firebaseconfig";
+import { ScrollView } from "react-native-gesture-handler";
 
 interface Props {
   habits: Habits[];
@@ -119,7 +120,6 @@ const CreateHabitBottomSheet = ({ habits, userHabitId }: Props) => {
       <BottomSheetModal
         ref={bottomSheetModalRef}
         index={1}
-        style={{ zIndex: 1000 }}
         snapPoints={snapPoints}
         handleComponent={null}
         onChange={handleSheetChanges}
@@ -132,7 +132,9 @@ const CreateHabitBottomSheet = ({ habits, userHabitId }: Props) => {
           />
         )}
       >
+        <ScrollView style={{flex: 1}}>
         <BottomSheetView style={styles.contentContainer}>
+          
           <Text style={styles.title}>Ajouter une habitude</Text>
           <View>
             <Text style={styles.subTitle}>Nom de l'habitude</Text>
@@ -167,7 +169,9 @@ const CreateHabitBottomSheet = ({ habits, userHabitId }: Props) => {
               <Text style={styles.buttonText}>+ Ajouter l'habitude</Text>
             </TouchableOpacity>
           </View>
+         
         </BottomSheetView>
+        </ScrollView>
       </BottomSheetModal>
     </View>
   );
@@ -201,7 +205,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 24,
   },
   subTitle: {
     fontSize: 16,
@@ -241,6 +244,7 @@ const styles = StyleSheet.create({
     padding: 10,
     textAlign: "center",
     borderRadius: 5,
+    marginBottom: 20
   },
 });
 

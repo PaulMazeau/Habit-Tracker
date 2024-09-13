@@ -22,6 +22,7 @@ import Animated, {
   useAnimatedProps,
 } from "react-native-reanimated";
 import Countdown from "../component/Reusable/Countdown";
+import { ScrollView } from "react-native-gesture-handler";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -140,6 +141,7 @@ export default function HomeScreen() {
       </View>
 
       <Text style={styles.subtitle}>Mes habitudes</Text>
+      <ScrollView>
       {habits.map((habit, index) => (
         <CheckInput
           key={index}
@@ -149,6 +151,7 @@ export default function HomeScreen() {
           onToggle={handleToggleHabit}
         />
       ))}
+      </ScrollView>
       <CreateHabitBottomSheet habits={habits} userHabitId={habitsDocId} />
     </View>
   );
