@@ -1,15 +1,14 @@
-# Getting Started with Habit Tracker App
+# Getting Started with the Habit Tracker App
 
-Welcome to the Habit Tracker App! Follow these instructions to set up and run the project on your development environment.
+Welcome to the Habit Tracker App! This guide will help you set up and run the project locally. The app is built with React Native and Expo, using Firebase for backend services.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
-
-- [Node.js](https://nodejs.org/) (v18.x or higher recommended)
+- [Node.js](https://nodejs.org/) (LTS version recommended)
 - [Expo CLI](https://docs.expo.dev/get-started/installation/)
 - [Git](https://git-scm.com/)
-- A mobile device (iOS/Android) or an emulator/simulator
+- [Firebase Account](https://firebase.google.com/)
+- A mobile device, emulator, or simulator for testing
 
 ## 1. Clone the Repository
 
@@ -20,57 +19,72 @@ cd Habit-Tracker
 
 ## 2. Install Dependencies
 
-Use npm or yarn to install required dependencies:
-
 ```bash
 npm install
-# or
-yarn
 ```
 
-## 3. Configure Environment Variables (Optional)
+## 3. Configure Environment Variables
 
-If your app requires environment variables, create a `.env` file at the project root. The app supports [react-native-dotenv](https://github.com/goatandsheep/react-native-dotenv).
+The app uses Firebase and requires environment variables for authentication and storage.
 
-Example `.env` file:
-```
-API_URL=https://your-api-url.com
-FIREBASE_API_KEY=your-firebase-api-key
-```
+1. Create a `.env` file in the root directory:
+    ```bash
+    touch .env
+    ```
+
+2. Add your Firebase project values (replace with your own API keys):
+
+    ```
+    APIKEY=your_firebase_api_key
+    AUTHDOMAIN=your_project.firebaseapp.com
+    PROJECTID=your_firebase_project_id
+    STORAGEBUCKET=your_project.appspot.com
+    MESSAGINGSENDERID=your_sender_id
+    APPID=your_app_id
+    ```
+
+> **Note:** You can find these values in your Firebase project settings.
 
 ## 4. Start the App
 
-Launch the Expo development server:
+You can run the app on several platforms:
 
-```bash
-npm start
-# or
-yarn start
-```
+- **Expo Go App (recommended):**
+    ```bash
+    npm start
+    ```
+    Scan the QR code with Expo Go on your device (iOS or Android).
 
-Then, follow the Expo CLI instructions:
+- **Android emulator:**
+    ```bash
+    npm run android
+    ```
 
-- Press `i` to open in iOS Simulator
-- Press `a` to open in Android Emulator
-- Scan the QR code with your Expo Go app on your physical device
+- **iOS simulator:**
+    ```bash
+    npm run ios
+    ```
+
+- **Web browser:**
+    ```bash
+    npm run web
+    ```
 
 ## 5. Project Structure Overview
 
-- `App.js`: Main entry point, wraps app with authentication and user context providers, sets up navigation.
-- `component/Navigation/`: Contains navigation stacks for authenticated and unauthenticated states.
-- `context/`: Provides authentication and user context.
+- `App.js`: Main entry point. Handles authentication state and navigation.
+- `firebaseconfig.js`: Initializes Firebase services (Auth, Firestore, Storage).
+- `context/`: Context providers for authentication and user data.
+- `component/Navigation/`: App navigation stacks for authenticated and unauthenticated flows.
 
-## 6. Useful Commands
+## 6. Next Steps
 
-- `npm run android` - Run app on Android device/emulator
-- `npm run ios` - Run app on iOS simulator
-- `npm run web` - Run app in web browser
-
-## Additional Resources
-
-- [Expo Documentation](https://docs.expo.dev/)
-- [React Native Documentation](https://reactnative.dev/)
+- Explore the app: Create an account or log in, then track your habits.
+- Customize Firebase rules for your needs.
+- Contribute enhancements or bug fixes via pull requests.
 
 ---
 
-You're now ready to start tracking your habits! If you run into any issues, consult the official documentation or open an issue on the project repository.
+Need help? Check the [Expo documentation](https://docs.expo.dev/) or the [Firebase documentation](https://firebase.google.com/docs/).
+
+Happy tracking!

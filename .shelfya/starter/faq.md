@@ -1,88 +1,103 @@
-# FAQ
+# Habit Tracker App FAQ
 
-Welcome to the Habit Tracker App FAQ! Here you'll find answers to common questions about using the app, account management, and technical basics.
-
----
-
-## Authentication
-
-### How do I create an account?
-
-To sign up, use your email and a secure password on the registration page. The app uses Firebase authentication to securely create your account.
-
-**Example (if using custom code):**
-```js
-signUp('your@email.com', 'yourPassword');
-```
-
-### How do I sign in?
-
-Log in with your registered email and password. On failure, check your credentials and try again.
-
-**Example (if using custom code):**
-```js
-signIn('your@email.com', 'yourPassword');
-```
-
-### I forgot my password. What should I do?
-
-You can reset your password by providing your email address. The app will send you a password reset email.
-
-**Example (if using custom code):**
-```js
-resetPassword('your@email.com');
-```
-
-### How do I sign out?
-
-Simply log out from the app menu or your profile.
-
-**Example (if using custom code):**
-```js
-logOut();
-```
+Welcome to the Habit Tracker App FAQ! This guide answers common questions to help you get started, troubleshoot issues, and make the most of the app.
 
 ---
 
-## Data & Storage
+## General
 
-### How does the app store my data?
+### What is the Habit Tracker App?
 
-The app uses [Firebase Firestore](https://firebase.google.com/docs/firestore) for storing your habits and tracking data. Files or media are stored in [Firebase Storage](https://firebase.google.com/docs/storage).
+The Habit Tracker App is a mobile application designed to help users build, monitor, and maintain habits using a user-friendly interface based on React Native and Expo.
 
-### Is my session saved? Will I stay logged in?
+---
 
-Yes. The app uses persistent authentication built for React Native, so your session is stored securely using device storage (`AsyncStorage`).
+## Installation & Setup
+
+### How do I run the app locally?
+
+1. **Install Prerequisites**
+   - [Node.js](https://nodejs.org/)
+   - [Expo CLI](https://docs.expo.dev/get-started/installation/)
+
+2. **Clone the Repository**
+   ```sh
+   git clone https://github.com/PaulMazeau/Habit-Tracker.git
+   cd Habit-Tracker
+   ```
+
+3. **Install Dependencies**
+   ```sh
+   npm install
+   ```
+
+4. **Start the App**
+   ```sh
+   npm start
+   ```
+
+5. **Run on Your Device or Emulator**
+   - For Android:
+     ```sh
+     npm run android
+     ```
+   - For iOS:
+     ```sh
+     npm run ios
+     ```
+   - For Web:
+     ```sh
+     npm run web
+     ```
 
 ---
 
 ## Troubleshooting
 
-### My authentication isn't working—what can I check?
+### I get errors related to Expo or dependencies. What should I do?
 
-- Ensure your device is connected to the internet.
-- Double-check your email and password.
-- If issues persist, try resetting your password.
+- Ensure you are using the correct version of Node.js.
+- Delete `node_modules` and `package-lock.json`, then run `npm install` again.
+- Make sure Expo CLI is installed globally:
+  ```sh
+  npm install -g expo-cli
+  ```
 
-### Why can't I see my habits after logging in from a different device?
+### How do I reset the project’s cache?
 
-Make sure you're signed in with the same account. All your data is linked to your unique account email in Firebase.
-
----
-
-## Technical
-
-### What technologies does the app use?
-
-- **React Native** for the app interface
-- **Firebase** (Authentication, Firestore, Storage)
-- **AsyncStorage** for session persistence
-
-### Where can I find the source code?
-
-You can find the source code on [GitHub](https://github.com/PaulMazeau/Habit-Tracker) (replace with actual repo link if different).
+If you encounter unexpected errors:
+```sh
+expo start -c
+```
 
 ---
 
-Still have questions?  
-Open an issue on GitHub or contact the project maintainers for support.
+## Features & Functionality
+
+### Which platforms are supported?
+
+The app supports Android, iOS, and web through Expo.
+
+### What libraries does the app use?
+
+Major libraries include:
+- React Native
+- Expo
+- Firebase (for backend support)
+- React Navigation (for in-app navigation)
+- Async Storage (for local data persistence)
+
+---
+
+## Contributing
+
+### How can I contribute?
+
+- Fork the repository and create a pull request.
+- Refer to the [official documentation](https://reactnative.dev/docs/getting-started) for contributing practices.
+
+---
+
+## More Questions?
+
+If you can’t find your answer here, please check the [project README](../../README.md) or open an issue on the repository.

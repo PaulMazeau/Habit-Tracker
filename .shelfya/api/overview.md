@@ -1,163 +1,121 @@
 # API Overview
 
-This document provides an overview of the authentication and user management API for the Habit Tracker application, including the main flows and hooks available throughout the codebase.
+This document provides an overview of the main API layers in the Habit Tracker app, focusing on authentication, user profiles, and core Firebase integration.
 
-## Architecture Overview
+## Firebase Configuration
 
-The app uses Firebase for authentication, cloud storage, and Firestore database. Key components include:
+The app is powered by [Firebase](https://firebase.google.com/), using:
 
-- **firebaseconfig.js**: Initializes Firebase services (Authentication, Firestore, Storage) and exports them for use across the app.
-- **AuthContext**: Provides authentication-related actions and state across the app using React's Context API.
-- **UserContext**: Manages and provides the current user’s profile data from Firestore.
+- **Authentication:** User sign-in, sign-up, password reset
+- **Firestore:** Database for user profile storage
+- **Storage:** For any file uploads (not detailed here)
 
-## Authentication Flow
-
-### 1. Firebase Configuration
-
-All Firebase services are initialized in `firebaseconfig.js`:
+Firebase is initialized in [`firebaseconfig.js`](../../firebaseconfig.js):
 
 ```js
 import { initializeApp } from "firebase/app";
 import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Configuration and initialization
-const FB_APP = initializeApp(firebaseconfig);
-const FB_AUTH = initializeAuth(FB_APP, { persistence: getReactNativePersistence(AsyncStorage) });
-const FB_DB = getFirestore(FB_APP);
+const firebaseconfig = { ... }; // Uses environment variables
 
-// Export the services
-export { FB_APP, FB_AUTH, FB_DB };
+const FB_APP   = initializeApp(firebaseconfig);
+const FB_AUTH  = initializeAuth(FB_APP, { persistence: getReactNativePersistence(AsyncStorage) });
+const FB_DB    = getFirestore(FB_APP);
+const FB_STORE = getStorage(FB_APP);
+
+export { FB_APP, FB_AUTH, FB_DB, FB_STORE };
 ```
 
-### 2. Auth Context
+## Auth Context
 
-The `AuthContext` provides:
+Authentication methods are provided via React Context in [`context/AuthContext.js`](../context/AuthContext.js):
 
-- Current user state
-- Sign Up
-- Sign In
-- Log Out
-- Password Reset
+### Main Features
 
-Usage example:
+- **Sign Up:** `signUp(email, password)`
+- **Sign In:** `signIn(email, password)`
+- **Log Out:** `logOut()`
+- **Reset Password:** `resetPassword(email)`
+- **Get Current User:** Real-time user state
 
-```js
-import { useAuth } from '../context/AuthContext';
-
-// To sign in
-const { signIn } = useAuth();
-signIn(email, password);
-
-// To sign up
-const { signUp } = useAuth();
-signUp(email, password);
-
-// To log out
-const { logOut } = useAuth();
-logOut();
-
-// To reset password
-const { resetPassword } = useAuth();
-resetPassword(email);
-
-// To access current user
-const { currentUser } = useAuth();
-```
-
-**Context Provider Example:**
-
-Wrap your app with `AuthProvider` to enable authentication features globally.
+### Usage Example
 
 ```jsx
-import { AuthProvider } from '../context/AuthContext';
+import { useAuth } from './context/AuthContext';
 
-<AuthProvider>
-  {/* ...your app components... */}
-</AuthProvider>
+function SignInButton() {
+  const { signIn } = useAuth();
+  const handleSignIn = async () => {
+    await signIn('user@example.com', 'password123');
+  };
+  // ...
+}
 ```
 
-### 3. User Context
+### Provider Setup
 
-The `UserContext` listens to Firestore changes for the signed-in user's profile and makes it available throughout the app.
-
-Usage example:
-
-```js
-import { useUser } from "../context/UserContext";
-
-const { profile } = useUser();
-console.log(profile.FirstName, profile.LastName);
-```
-
-**Context Provider Example:**
-
-Wrap your app with `UserProvider` alongside `AuthProvider`.
+Wrap your app tree with `AuthProvider` to grant access:
 
 ```jsx
-import { UserProvider } from '../context/UserContext';
+import { AuthProvider } from './context/AuthContext';
+
+function App() {
+  return (
+    <AuthProvider>
+      {/* your app routes/components */}
+    </AuthProvider>
+  );
+}
+```
+
+## User Context
+
+User profile data is managed with Firestore and exposed via [`context/UserContext.js`](../context/UserContext.js).
+
+- **Real-time user profile data** from Firestore
+- **Accessible via context**: `useUser()`
+- **Automatically updated on changes**
+
+### Usage Example
+
+```jsx
+import { useUser } from './context/UserContext';
+
+function Profile() {
+  const { profile } = useUser();
+  return <Text>Welcome, {profile.displayName}</Text>;
+}
+```
+
+### Provider Setup
+
+Wrap your relevant components with `UserProvider` (make sure `AuthProvider` is a parent):
+
+```jsx
+import { UserProvider } from './context/UserContext';
 
 <AuthProvider>
   <UserProvider>
-    {/* ...your app components... */}
+    <YourMainApp />
   </UserProvider>
 </AuthProvider>
 ```
 
-## Authentication Screens
+## Best Practices
 
-### Sign In
+- Always wrap your app with the `AuthProvider` and `UserProvider` for context availability.
+- Use context hooks (`useAuth`, `useUser`) in functional components for API access.
+- Ensure your environment variables for Firebase configuration are properly set.
 
-- Validates email and password.
-- Calls `signIn`.
-- Handles authentication errors.
+## Learn More
 
-Example usage:
-
-```js
-const { signIn } = useAuth();
-signIn(email, password).then(...).catch(...);
-```
-
-### Sign Up
-
-- Collects first name, last name, email, and password.
-- Calls `signUp`.
-- Creates a user document in Firestore.
-
-Example usage:
-
-```js
-const { signUp } = useAuth();
-signUp(email, password)
-  .then(userCredential => {
-    const userDocRef = doc(FB_DB, 'users', userCredential.user.uid);
-    return setDoc(userDocRef, {
-      FirstName: firstName,
-      LastName: lastName,
-    });
-  });
-```
-
-### Home Screen
-
-- Displays a welcome message using profile data from `UserContext`.
-- Allows user to log out.
-
-Example:
-
-```js
-const { profile } = useUser();
-<Text>Bienvenue {profile.FirstName} {profile.LastName}</Text>
-```
-
-## Additional Resources
-
-- [Firebase Authentication Documentation](https://firebase.google.com/docs/auth)
-- [React Context API](https://react.dev/reference/react/useContext)
-- [Firestore Documentation](https://firebase.google.com/docs/firestore)
+- [Firebase Authentication Docs](https://firebase.google.com/docs/auth)
+- [Firestore Docs](https://firebase.google.com/docs/firestore)
+- [React Context Docs](https://react.dev/reference/react/Context)
 
 ---
 
-**Tip:** Always wrap your root component in both `AuthProvider` and `UserProvider` to ensure authentication and profile data are accessible throughout your app.
+This overview covers the foundational API setup and usage. Refer to the context source files for custom extensions or advanced patterns.

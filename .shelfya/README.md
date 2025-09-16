@@ -1,98 +1,111 @@
-# Shelfya: Getting Started with Habit Tracker App
+# Shelfya Workspace — Habit Tracker App
 
-Welcome to Shelfya's Habit Tracker App! This guide helps you quickly get up and running with the app and explains the basic structure.
-
-## Overview
-
-Shelfya Habit Tracker App lets you track habits and challenges using a secure authentication system and user management. It’s built with React Native and Expo, supporting Android, iOS, and web.
-
-## Features
-
-- User Authentication
-- Habit tracking workflows
-- Seamless navigation between main and auth screens
-- Cross-platform (Android, iOS, Web)
-
-## Prerequisites
-
-- Node.js (v16+ recommended)
-- npm or yarn
-- Expo CLI:  
-  ```bash
-  npm install -g expo-cli
-  ```
-
-## Installation
-
-1. **Clone the repository**
-    ```bash
-    git clone https://github.com/PaulMazeau/Habit-Tracker.git
-    cd Habit-Tracker
-    ```
-
-2. **Install dependencies**
-    ```bash
-    npm install
-    ```
-
-3. **Start the app**
-    ```bash
-    npm start
-    ```
-    You can also target specific platforms:
-    ```bash
-    npm run android
-    npm run ios
-    npm run web
-    ```
-
-## Project Structure
-
-- `App.js`: Sets up authentication, user context, and navigation between main content and login/register screens.
-- `context/AuthContext.js`: Handles user authentication state.
-- `context/UserContext.js`: Manages logged-in user details.
-- `component/Navigation/MainStack.js`: Main app navigation.
-- `component/Navigation/AuthStack.js`: Auth flow navigation.
-
-## Navigation Logic Example
-
-```jsx
-const { currentUser, loading } = useAuth();
-
-if (loading) {
-  return <ActivityIndicator size="large" />;
-}
-
-// App shows MainStack if authenticated, else AuthStack
-<Stack.Navigator>
-  {currentUser ? (
-    <Stack.Screen name="Main" component={MainStack} />
-  ) : (
-    <Stack.Screen name="Auth" component={AuthStack} />
-  )}
-</Stack.Navigator>
-```
-
-## Platform Settings
-
-- Portrait orientation
-- Custom splash and app icons: Place images in the `assets` folder as referenced in `app.json`.
-- Tablet support for iOS
-- Adaptive icons for Android
-
-## Useful Scripts
-
-- `start`: Launches Expo developer tools
-- `android`: Runs app on Android emulator/device
-- `ios`: Runs app on iOS simulator/device
-- `web`: Runs app in the browser
-
-## More Resources
-
-- [Expo Documentation](https://docs.expo.dev/)
-- [React Native Documentation](https://reactnative.dev/)
-- [Firebase Documentation](https://firebase.google.com/docs)
+Welcome to the developer workspace for the Habit Tracker App, codenamed "thechallengeapp." This document provides workspace-level guidance to help you set up, run, and contribute to the project.
 
 ---
 
-Ready to build your habit-tracking journey? Follow these steps and start customizing!
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Quick Start](#quick-start)
+- [Development Workflow](#development-workflow)
+- [Available Scripts](#available-scripts)
+- [Key Dependencies](#key-dependencies)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+
+---
+
+## Project Overview
+
+Habit Tracker App is a React Native application designed to help users build and track their daily habits. The project uses Expo for rapid development and includes authentication, user management, and navigation stacks.
+
+---
+
+## Quick Start
+
+**Prerequisites:**
+
+- [Node.js](https://nodejs.org/) (v14 or above recommended)
+- [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+
+**Installation:**
+
+```sh
+git clone https://github.com/PaulMazeau/Habit-Tracker.git
+cd Habit-Tracker
+yarn install              # or npm install
+```
+
+**Starting the App:**
+
+```sh
+yarn start                # or npm start
+```
+
+You can also run on specific platforms:
+
+- Android: `yarn android`
+- iOS: `yarn ios`
+- Web: `yarn web`
+
+---
+
+## Development Workflow
+
+The main entry point is `App.js`. The app uses two main context providers: `AuthProvider` for authentication state, and `UserProvider` for user data. Navigation uses React Navigation's Native Stack and Bottom Tabs.
+
+- **Auth Flow:** Unauthenticated users are shown the `AuthStack` (authentication screens). When logged in, users access the `MainStack` (main app content).
+- **Loading State:** While authentication state is being established, a centered loading spinner (`ActivityIndicator`) is displayed.
+
+---
+
+## Available Scripts
+
+| Script      | Description                      |
+|-------------|----------------------------------|
+| `start`     | Launches the Expo development server |
+| `android`   | Runs the app on an Android simulator/device |
+| `ios`       | Runs the app on an iOS simulator/device     |
+| `web`       | Runs the app in a web browser    |
+
+Example usage:
+
+```sh
+yarn start
+```
+
+---
+
+## Key Dependencies
+
+- `react-native`: App core
+- `expo`: Platform and build tooling
+- `@react-navigation/native`: Navigation
+- `firebase`: Backend and authentication
+- `@react-native-async-storage/async-storage`: Local storage
+- `react-native-reanimated`, `react-native-svg`: UI/Animation
+
+_See [`package.json`](../package.json) for a full list._
+
+---
+
+## Troubleshooting
+
+- **Blank screen at startup:** Ensure your Firebase configuration is correct in your context files.
+- **Emulator issues:** Make sure Android Studio or Xcode simulators are running.
+- **Dependencies not found:** Run `yarn install` or `npm install` to resolve.
+
+---
+
+## Resources
+
+- [React Native Docs](https://reactnative.dev/docs/getting-started)
+- [Expo Documentation](https://docs.expo.dev/)
+- [React Navigation Guide](https://reactnavigation.org/docs/getting-started)
+- [Firebase for JavaScript](https://firebase.google.com/docs)
+
+---
+
+Happy tracking — improve your habits with every commit!

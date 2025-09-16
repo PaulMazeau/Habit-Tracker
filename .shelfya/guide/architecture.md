@@ -1,125 +1,126 @@
-# Application Architecture Guide
+# Architecture Overview
 
-This document provides an overview of the key architectural components of the Habit-Tracker application, focusing on navigation flow and context management. It is aimed at developers and contributors interested in understanding the structure and how major parts interact.
+This document outlines the architecture of the Habit Tracker app, describing its core structure, navigation flow, state management, and integration with Firebase services.
 
-## Overview
+## Application Structure
 
-The application is built using React Native and organizes logic using a combination of navigation stacks and context providers for authentication and user profile management.
+The app is built using React Native and utilizes the following main components:
 
-```
-App.js
-│
-├── <AuthProvider>
-│   └── <UserProvider>
-│        └── <NavigationContainer>
-│             └── AppNavigator (dynamic stack: AuthStack or MainStack)
-```
+- **App Initialization** (`App.js`): Entry point of the app, setting up global providers and navigation.
+- **Navigation**:
+  - **AuthStack**: Screens for authentication (sign-up, sign-in, onboarding).
+  - **MainStack**: Main app tabs (Home, Browse, Profile).
+- **State Management**:
+  - **AuthContext**: Handles authentication state and operations.
+  - **UserContext**: Manages user profile data from Firestore.
+- **Firebase Integration**: Manages authentication, database, and storage via Firebase.
 
-## Navigation Architecture
+## Core Providers
 
-### Entry Point: `App.js`
+### AuthProvider
 
-- Wraps children with:
-  - `AuthProvider`: Handles authentication state and actions.
-  - `UserProvider`: Manages user profile state.
-  - `NavigationContainer`: Core navigation context from React Navigation.
+- Responsible for authentication state.
+- Methods: `signUp`, `signIn`, `logOut`, `resetPassword`.
+- Holds `currentUser`, detects auth state changes.
+- Wraps the whole app to provide context accessible via `useAuth()`.
 
-### Dynamic Stack Navigation: `AppNavigator`
-
-- Uses the `useAuth()` hook to check authentication state.
-- Displays a loading spinner during initialization.
-- Chooses stack:
-  - If `currentUser` is null: renders `AuthStack`
-  - If authenticated: renders `MainStack`
-
-#### Example Pseudocode
+#### Example Usage
 
 ```js
-if (loading) return <ActivityIndicator />;
-else if (currentUser) return <MainStack />;
-else return <AuthStack />;
+import { useAuth } from './context/AuthContext';
+
+const { currentUser, signIn } = useAuth();
 ```
 
-### Auth Stack: `component/Navigation/AuthStack.js`
+### UserProvider
 
-Manages unauthenticated screens:
-- `FirstScreen`: Welcome or onboarding.
-- `SignUpScreen`: New user registration.
-- `SignInScreen`: User login.
+- Fetches and provides user's profile data from Firestore.
+- Syncs to the authenticated user (`currentUser`).
+- Accessible via `useUser()`.
 
-```js
-<AuthStack>
-  [FirstScreen] → [SignUpScreen] ↔ [SignInScreen]
-</AuthStack>
-```
-
-### Main Stack: `component/Navigation/MainStack.js`
-
-Main navigation for authenticated users, via a bottom tab navigator:
-- **HomeScreen**: Dashboard.
-- **BrowseScreen**: Browse habits.
-- **ProfileScreen**: User profile.
-
-Icons are imported SVGs for each tab.
+#### Example Usage
 
 ```js
-<MainStack>
-  [HomeScreen] [BrowseScreen] [ProfileScreen]
-</MainStack>
-```
+import { useUser } from './context/UserContext';
 
-## Context Architecture
-
-### Authentication Context: `context/AuthContext.js`
-
-Provides:
-- `currentUser`: Current user state.
-- `signUp(email, password)`: Registers user via Firebase.
-- `signIn(email, password)`: Logs in via Firebase.
-- `resetPassword(email)`: Sends password reset email.
-- `logOut()`: Signs out.
-- `loading`: Boolean for async status.
-
-#### Usage Example
-
-```js
-const { signIn, currentUser } = useAuth();
-await signIn('user@example.com', 'password');
-```
-
-### User Profile Context: `context/UserContext.js`
-
-Provides:
-- Real-time sync of user profile from Firestore.
-- Context value: `profile` object.
-
-Upon authentication, listens to the Firestore `users/<uid>` document for profile changes.
-
-#### Usage Example
-
-```js
 const { profile } = useUser();
-console.log(profile.username); // Access profile fields
 ```
 
-## Data Flow Summary
+## Navigation Flow
 
-- **Authentication:** Managed and tracked globally. UI responds to auth status.
-- **User Profile:** Automatically listens for updates when authenticated.
-- **Navigation:** Auth state decides which stack is shown. Authenticated users get main features, unauthenticated see login/signup screens.
+The app uses React Navigation with two main stack navigators, dynamically chosen based on authentication state.
 
-## Extending the Architecture
+### App Flow (`App.js`)
 
-- Add more screens to `AuthStack` or `MainStack` by modifying their respective files.
-- To access authentication or user data in any component, use `useAuth()` or `useUser()` hooks.
+1. AuthProvider and UserProvider wrap the app.
+2. `AppNavigator` checks if user is authenticated:
+    - If **loading**, shows a spinner.
+    - If **authenticated** (`currentUser` exists), loads `MainStack`.
+    - Otherwise, loads `AuthStack`.
 
-## References
+```js
+if (currentUser) {
+  <Stack.Screen name="Main" component={MainStack} />
+} else {
+  <Stack.Screen name="Auth" component={AuthStack} />
+}
+```
 
-- [React Navigation Docs](https://reactnavigation.org/)
-- [React Context API](https://react.dev/reference/react/useContext)
-- [Firebase Authentication](https://firebase.google.com/docs/auth)
-- [Firebase Firestore](https://firebase.google.com/docs/firestore)
+### AuthStack (`component/Navigation/AuthStack.js`)
+
+- Handles onboarding and authentication screens.
+- Initial screen: FirstScreen.
+- Includes SignUp and SignIn flows.
+
+### MainStack (`component/Navigation/MainStack.js`)
+
+- Bottom tab navigator for main features:
+    - `HomeScreen`
+    - `BrowseScreen`
+    - `ProfileScreen`
+- Icons for tabs are provided via SVG assets.
+
+## Firebase Integration
+
+All Firebase configuration and initialization is located in `firebaseconfig.js`. 
+
+### Services
+
+- **Authentication**: With native persistence using AsyncStorage.
+- **Firestore**: For user profile and app data.
+- **Storage**: For file uploads (e.g., profile images).
+
+```js
+const FB_APP = initializeApp(firebaseconfig);
+const FB_AUTH = initializeAuth(FB_APP, { persistence: getReactNativePersistence(AsyncStorage) });
+const FB_DB = getFirestore(FB_APP);
+const FB_STORE = getStorage(FB_APP);
+```
+
+Exported for use throughout the app.
+
+## Data Flow
+
+- **AuthContext** monitors authentication from Firebase Auth.
+- **UserContext** listens to Firestore user document changes for the authenticated user.
+- **Navigation** switches between authentication stack and main app tabs based on user state.
+
+## Extensibility & Modularity
+
+- **Contexts**: Encapsulate logic and state for authentication and profile management, making the app modular and easy to extend.
+- **Navigation**: Stack and tab navigation allow for expandable screen flows.
+
+## Summary
+
+The Habit Tracker app is architected to be modular, scalable, and secure, with clear separation between authentication, user data management, navigation, and Firebase integration. For further extension, developers can add screens to either stack, expand profile/user contexts, or integrate new Firebase services as needed.
 
 ---
 
-This guide provides the foundational layout for navigation and context. For feature implementation details, see the relevant screen and service/component files.
+**Related files and links:**
+
+- [App.js](../../App.js)
+- [AuthContext.js](../../context/AuthContext.js)
+- [UserContext.js](../../context/UserContext.js)
+- [firebaseconfig.js](../../firebaseconfig.js)
+- [AuthStack.js](../../component/Navigation/AuthStack.js)
+- [MainStack.js](../../component/Navigation/MainStack.js)
